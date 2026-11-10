@@ -1,0 +1,23 @@
+# Golden macOS signing/notarization settings for an Electron app.
+#
+# Merge these into the app's existing electron-builder config; keep the app's
+# own appId, productName, targets, files, and artifact names.
+
+# Custom notarization hook. It runs after signing and reads the App Store
+# Connect API key (or the legacy Apple ID fallback).
+afterSign: scripts/notarize.js
+
+mac:
+  target:
+    - dmg
+    - zip
+  artifactName: ${name}-${version}-${os}-${arch}.${ext}
+  hardenedRuntime: true
+  # Intentional: scripts/notarize.js owns notarization. Do not let
+  # electron-builder's built-in wrapper run a second time.
+  notarize: false
+  entitlements: resources/entitlements.mac.plist
+  entitlementsInherit: resources/entitlements.mac.plist
+
+# Build arm64 explicitly in CI:
+#   npx electron-builder --mac --arm64 --publish never

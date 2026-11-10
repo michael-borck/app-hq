@@ -1,0 +1,224 @@
+name: Build and Release
+
+# Golden Electron release pattern, extracted from the batch C Lens repos
+# (insight-lens, thematic-lens, lens-desktop, assessment-bench-desktop).
+#
+# Tag push: prepare draft release -> build/upload all platforms -> publish draft.
+# Manual dispatch: runs only notarize-check (sign, notarize, verify, no publish).
+#
+# Adapt: package script, output directory, artifact names, Node version,
+# electron-builder script, and whether to auto-publish the draft.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  # Manual run = credential check only. Use after rotating Apple credentials
+  # or renewing the developer membership. It does not create a release.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-release:
+    # Tag pushes only. A manual dispatch skips this, and `needs` cascades the
+    # skip through build/finalize-release, leaving only notarize-check.
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v7
+
+      - name: Create or reuse draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ github.ref_name }}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "Release ${{ github.ref_name }} already exists; using it."
+          else
+            gh release create "${{ github.ref_name }}" --repo "${{ github.repository }}" --draft \
+              --title "${{ github.event.repository.name }} ${{ github.ref_name }}" \
+              --generate-notes
+          fi
+
+  build:
+    needs: prepare-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, ubuntu-latest, windows-latest]
+        include:
+          - os: macos-15
+            platform: mac
+          - os: ubuntu-latest
+            platform: linux
+          - os: windows-latest
+            platform: win
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v7
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Prepare App Store Connect API key
+        if: matrix.os == 'macos-15'
+        env:
+          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          if [ -n "$APPLE_API_KEY_CONTENT" ] && [ -n "$APPLE_API_KEY" ]; then
+            mkdir -p "$RUNNER_TEMP/apple-api"
+            KEY_PATH="$RUNNER_TEMP/apple-api/AuthKey_${APPLE_API_KEY}.p8"
+            printf '%s' "$APPLE_API_KEY_CONTENT" | openssl base64 -d -A > "$KEY_PATH"
+            chmod 600 "$KEY_PATH"
+            echo "APPLE_API_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+          else
+            echo "No API key secrets; notarization will fall back to Apple ID"
+          fi
+
+      - name: Build Electron app (macOS)
+        if: matrix.os == 'macos-15'
+        # Replace `npx electron-builder` with the app's packaging script
+        # (e.g. `npm run dist --`) if it sets extra flags/config.
+        run: |
+          if [ -z "$CSC_LINK" ]; then
+            unset CSC_LINK CSC_KEY_PASSWORD
+            unset NOTARIZE_APPLE_ID NOTARIZE_APPLE_PASSWORD NOTARIZE_APPLE_TEAM_ID
+            unset APPLE_API_KEY_PATH APPLE_API_KEY APPLE_API_ISSUER APPLE_API_KEY_CONTENT
+            export CSC_IDENTITY_AUTO_DISCOVERY=false
+            echo "CSC_LINK not set - building unsigned"
+          fi
+          npx electron-builder --mac --arm64 --publish always
+        env:
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+          # electron-builder imports the Developer ID cert from these; no
+          # manual keychain step is needed.
+          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE || secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD || secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+          # Deliberately NOTARIZE_* so electron-builder's built-in wrapper
+          # does not run alongside scripts/notarize.js.
+          NOTARIZE_APPLE_ID: ${{ secrets.APPLE_ID }}
+          NOTARIZE_APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          NOTARIZE_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Electron app (Windows)
+        if: matrix.os == 'windows-latest'
+        run: npx electron-builder --win --publish always
+        env:
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Electron app (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: npx electron-builder --linux --publish always
+        env:
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts (debug copy)
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.platform }}-distributables
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.zip
+            release/*.AppImage
+            release/*.yml
+            release/*.yaml
+            release/*.blockmap
+          if-no-files-found: ignore
+          retention-days: 5
+
+  finalize-release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish draft release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "${{ github.ref_name }}" \
+            --repo ${{ github.repository }} \
+            --draft=false
+
+  # Manual credential check (Actions -> Run workflow).
+  # Builds/signs/notarizes a single-arch macOS app with publishing disabled,
+  # then verifies the staple and Gatekeeper assessment. Fails without touching
+  # a release if the certificate or Apple credentials are invalid.
+  notarize-check:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v7
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Prepare App Store Connect API key
+        env:
+          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+        run: |
+          if [ -n "$APPLE_API_KEY_CONTENT" ] && [ -n "$APPLE_API_KEY" ]; then
+            mkdir -p "$RUNNER_TEMP/apple-api"
+            KEY_PATH="$RUNNER_TEMP/apple-api/AuthKey_${APPLE_API_KEY}.p8"
+            printf '%s' "$APPLE_API_KEY_CONTENT" | openssl base64 -d -A > "$KEY_PATH"
+            chmod 600 "$KEY_PATH"
+            echo "APPLE_API_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+          else
+            echo "No API key secrets; notarization will fall back to Apple ID"
+          fi
+
+      - name: Build, sign and notarize (arm64 zip, no publish)
+        run: npx electron-builder --mac zip --arm64 --publish never
+        env:
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE || secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD || secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+          NOTARIZE_APPLE_ID: ${{ secrets.APPLE_ID }}
+          NOTARIZE_APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          NOTARIZE_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+
+      - name: Verify notarization
+        run: |
+          APP="$(find release -maxdepth 3 -type d -name '*.app' | head -1)"
+          if [ -z "$APP" ]; then
+            echo "No .app found under release/ — adjust the output path."
+            exit 1
+          fi
+          echo "── codesign ──"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          echo "── stapler (notarization ticket) ──"
+          xcrun stapler validate "$APP"
+          echo "── Gatekeeper assessment ──"
+          spctl --assess --type execute --verbose=2 "$APP"
+          echo "✅ Signed, notarized, and stapled — credentials are good."
