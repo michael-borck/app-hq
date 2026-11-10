@@ -1,0 +1,31 @@
+# Secrets and signing material must never enter this repo.
+*.p12
+*.p8
+*.pfx
+*.pem
+*.key
+*.cer
+*.mobileprovision
+.env
+.env.*
+.build.keychain*
+
+# OS / editor
+.DS_Store
+._*
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Dependencies / build output
+node_modules/
+dist/
+build/
+release/
+out/
+.next/
+target/
+coverage/
+*.log
+*.tmp
