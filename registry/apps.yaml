@@ -79,8 +79,8 @@ apps:
   - repo: michael-borck/document-lens
     stack: tauri
     mode: local
-    signing_workflow: tauri-legacy
-    notes: "Sidecar/PyInstaller; own updater key; dormant Azure Windows signing."
+    signing_workflow: api-key
+    notes: "Tauri batch verified with API-key notarization on macos-15; own updater key; dormant Azure Windows signing."
 
   - repo: michael-borck/character-craft-lite
     stack: electron
@@ -133,8 +133,8 @@ apps:
   - repo: michael-borck/ethos-mirror
     stack: tauri
     mode: local
-    signing_workflow: tauri-legacy
-    notes: "Tauri batch A."
+    signing_workflow: api-key
+    notes: "Tauri batch verified with API-key notarization on macos-latest."
 
   - repo: michael-borck/Knotebook
     stack: tauri
@@ -145,14 +145,14 @@ apps:
   - repo: michael-borck/limn
     stack: tauri
     mode: local
-    signing_workflow: tauri-legacy
-    notes: "Tauri batch A."
+    signing_workflow: api-key
+    notes: "Tauri batch verified with API-key notarization; manual dispatch uploads artifacts."
 
   - repo: michael-borck/slide-stream
     stack: tauri
     mode: local
-    signing_workflow: tauri-legacy
-    notes: "Tauri batch B."
+    signing_workflow: api-key
+    notes: "Tauri batch verified with API-key notarization; manual dispatch uploads artifacts."
 
   - repo: michael-borck/venture-lab
     stack: tauri
