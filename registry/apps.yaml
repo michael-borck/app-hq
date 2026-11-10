@@ -103,14 +103,14 @@ apps:
   - repo: michael-borck/cite-sight
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: "Deferred: manual DMG notarization flow; needs redesign and investigation."
+    signing_workflow: api-key
+    notes: "Batch D verified: manual DMG notarization now uses App Store Connect API key."
 
   - repo: michael-borck/bowerbird
     stack: electron
     mode: local
     signing_workflow: legacy
-    notes: "Deferred: release uses separate manual DMG notarization; needs a second pass."
+    notes: "Blocked: origin/main was force-rewritten to a Python-only project with no desktop package; local old history preserved on backup/bowerbird-local-2026-11-10. Reconcile before signing."
 
   - repo: michael-borck/curriculum-curator
     stack: electron

@@ -232,8 +232,10 @@ key is present.
   and verifies without creating a release.
 - Electron batch D: character-craft-lite, feed-forward-desktop,
   assessment-lens-desktop, curriculum-curator verified.
-  bowerbird and cite-sight are deferred: both still use a separate manual DMG
-  notarization step with Apple ID and need a dedicated API-key rewrite.
+- cite-sight: manual DMG notarization rewritten to the API key and verified.
+- bowerbird: blocked. `origin/main` was force-rewritten to a Python-only project
+  with no `packages/desktop` package; the old local history is preserved on
+  `backup/bowerbird-local-2026-11-10`. Reconcile the repo before signing.
 
 ### Keychain auto-lock
 
