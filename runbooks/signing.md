@@ -257,6 +257,8 @@ this and needed a 15-minute retry timeout to expose it.
 - Tauri batch A: limn, slide-stream, ethos-mirror, document-lens verified with
   API-key notarization. limn/slide-stream/ethos-mirror support manual dispatch
   with artifact uploads; document-lens creates a draft release on dispatch.
+- Tauri batch B: numeron and astron verified with API-key notarization. Their
+  per-app updater keys remain in place.
 - Knotebook: Tauri; v0.1.0 signed + notarized on both macOS arches (verified
   with codesign/spctl/stapler). PWA auto-deploys on pushes to `main`; desktop
   releases are tag-gated and draft by default.

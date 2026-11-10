@@ -169,8 +169,8 @@ apps:
   - repo: retroverse-studios/astron
     stack: tauri
     mode: local
-    signing_workflow: tauri-legacy
-    notes: "Own updater key."
+    signing_workflow: api-key
+    notes: "Tauri batch B verified with API-key notarization; own updater key preserved."
 
   - repo: retroverse-studios/karaoke-stage
     stack: tauri
@@ -181,8 +181,8 @@ apps:
   - repo: retroverse-studios/numeron
     stack: tauri
     mode: local
-    signing_workflow: tauri-legacy
-    notes: "Own updater key."
+    signing_workflow: api-key
+    notes: "Tauri batch B verified with API-key notarization; own updater key preserved."
 
 # Content-store companions (not desktop apps)
 services:
