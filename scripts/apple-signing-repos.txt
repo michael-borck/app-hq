@@ -1,6 +1,6 @@
 # owner/repo            type     notes
 michael-borck/book-forge electron
-michael-borck/bowerbird electron
+michael-borck/honeyguide electron
 michael-borck/cabinet electron
 michael-borck/career-compass electron
 michael-borck/character-craft-lite electron

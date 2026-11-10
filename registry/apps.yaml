@@ -88,6 +88,11 @@ apps:
     signing_workflow: api-key
     notes: "Batch D verified with API-key notarization on macos-15."
 
+  - repo: michael-borck/honeyguide
+    stack: electron
+    mode: local
+    signing_workflow: api-key
+    notes: "Desktop app at packages/desktop; API-key notarization verified on macos-15."
   - repo: michael-borck/feed-forward-desktop
     stack: electron
     mode: local
@@ -106,11 +111,6 @@ apps:
     signing_workflow: api-key
     notes: "Batch D verified: manual DMG notarization now uses App Store Connect API key."
 
-  - repo: michael-borck/bowerbird
-    stack: electron
-    mode: local
-    signing_workflow: legacy
-    notes: "Blocked: origin/main was force-rewritten to a Python-only project with no desktop package; local old history preserved on backup/bowerbird-local-2026-11-10. Reconcile before signing."
 
   - repo: michael-borck/curriculum-curator
     stack: electron

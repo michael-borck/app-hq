@@ -233,9 +233,10 @@ key is present.
 - Electron batch D: character-craft-lite, feed-forward-desktop,
   assessment-lens-desktop, curriculum-curator verified.
 - cite-sight: manual DMG notarization rewritten to the API key and verified.
-- bowerbird: blocked. `origin/main` was force-rewritten to a Python-only project
-  with no `packages/desktop` package; the old local history is preserved on
-  `backup/bowerbird-local-2026-11-10`. Reconcile the repo before signing.
+- honeyguide: the Electron app formerly mis-filed under `bowerbird`; now
+  verified with API-key notarization on `macos-15` (notarize-check passed).
+- bowerbird: Python-only bookmark tool, not a desktop app; removed from the
+  Apple signing list and its Apple secrets were deleted.
 
 ### Keychain auto-lock
 
