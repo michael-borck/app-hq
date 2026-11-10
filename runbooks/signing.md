@@ -1,7 +1,7 @@
 # Signing and notarization runbook
 
 Status: 2026-11-10. Apple secrets synced to all 30 desktop repos. book-forge is
-the verified Electron pilot; lesson-loom is the Tauri pilot.
+the verified Electron pilot; lesson-loom v0.3.1 is the verified Tauri pilot.
 
 ## Model
 
@@ -200,7 +200,8 @@ key is present.
 
 - All 30 repos have canonical Apple secrets.
 - book-forge: Electron pilot signed + notarized with API key on `macos-15`.
-- lesson-loom: Tauri pilot wired; release test pending.
+- lesson-loom: Tauri pilot verified on v0.3.1 (both macOS arches notarized;
+  `spctl` reports Notarized Developer ID).
 - Legacy `APPLE_ID` / `APPLE_APP_SPECIFIC_PASSWORD` remain in some repos until
   migration; revoke exposed app-specific passwords after the Electron batch
   migration or after installing one new fallback.

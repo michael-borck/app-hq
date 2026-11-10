@@ -14,7 +14,7 @@ apps:
     stack: tauri
     mode: local
     signing_workflow: api-key
-    notes: Tauri pilot; release test pending.
+    notes: Tauri pilot verified on v0.3.1; signed and notarized.
 
   - repo: michael-borck/debrief
     stack: electron
