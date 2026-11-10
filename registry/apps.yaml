@@ -19,20 +19,20 @@ apps:
   - repo: michael-borck/debrief
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Recent signed releases; batch A.
+    signing_workflow: api-key
+    notes: Batch A verified with API-key notarization on macos-15.
 
   - repo: michael-borck/cabinet
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Batch A.
+    signing_workflow: api-key
+    notes: Batch A verified with API-key notarization on macos-15.
 
   - repo: michael-borck/career-compass
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Batch A.
+    signing_workflow: api-key
+    notes: Batch A verified with API-key notarization on macos-15.
 
   - repo: michael-borck/playable-lessons
     stack: electron

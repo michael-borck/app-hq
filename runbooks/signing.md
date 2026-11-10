@@ -200,6 +200,8 @@ key is present.
 
 - All 30 repos have canonical Apple secrets.
 - book-forge: Electron pilot signed + notarized with API key on `macos-15`.
+- Electron batch A: debrief, cabinet, career-compass verified with API-key
+  notarization on `macos-15` (career-compass DMG checked with spctl/stapler).
 - lesson-loom: Tauri pilot verified on v0.3.1 (both macOS arches notarized;
   `spctl` reports Notarized Developer ID).
 - Legacy `APPLE_ID` / `APPLE_APP_SPECIFIC_PASSWORD` remain in some repos until
