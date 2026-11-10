@@ -254,6 +254,9 @@ Without the timeout, codesign can hang on a locked keychain; study-buddy hit
 this and needed a 15-minute retry timeout to expose it.
 - lesson-loom: Tauri pilot verified on v0.3.1 (both macOS arches notarized;
   `spctl` reports Notarized Developer ID).
+- Knotebook: Tauri; v0.1.0 signed + notarized on both macOS arches (verified
+  with codesign/spctl/stapler). PWA auto-deploys on pushes to `main`; desktop
+  releases are tag-gated and draft by default.
 - Legacy `APPLE_ID` / `APPLE_APP_SPECIFIC_PASSWORD` remain in some repos until
   migration; revoke exposed app-specific passwords after the Electron batch
   migration or after installing one new fallback.

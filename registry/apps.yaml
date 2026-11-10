@@ -139,8 +139,8 @@ apps:
   - repo: michael-borck/Knotebook
     stack: tauri
     mode: local
-    signing_workflow: none
-    notes: "Static store via knotebook-store."
+    signing_workflow: api-key
+    notes: "Tauri; v0.1.0 signed/notarized on both macOS arches; PWA and store deploy to Pages."
 
   - repo: michael-borck/limn
     stack: tauri
