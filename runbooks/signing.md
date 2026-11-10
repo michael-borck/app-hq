@@ -204,6 +204,10 @@ key is present.
   notarization on `macos-15` (career-compass DMG checked with spctl/stapler).
 - Electron batch B: playable-lessons, study-buddy, talk-buddy verified with
   API-key notarization on `macos-15`.
+- Electron batch C: insight-lens, thematic-lens, lens-desktop,
+  assessment-bench-desktop verified with API-key notarization on `macos-15`.
+  These now have a `notarize-check` workflow_dispatch job that signs, notarizes,
+  and verifies without creating a release.
 
 ### Keychain auto-lock
 
