@@ -135,6 +135,28 @@ book-forge run 42762263662 verified with `codesign --verify`,
 `spctl --assess`, and `xcrun stapler validate`. `spctl` reported
 “Notarized Developer ID”.
 
+### Manual credential check (`notarize-check`)
+
+Batch C repos include a `workflow_dispatch`-only `notarize-check` job. It
+builds a single arm64 macOS zip with `--publish never`, signs and notarizes it,
+then verifies:
+
+```bash
+codesign --verify --deep --strict --verbose=2 "App.app"
+xcrun stapler validate "App.app"
+spctl --assess --type execute --verbose=2 "App.app"
+```
+
+It does **not** create a release or upload assets, so it is safe to run after
+rotating the API key, renewing the developer membership, or changing the
+signing certificate. The release jobs are tag-gated; a manual dispatch only
+runs the credential check. Use
+[`templates/electron/release.yml`](../templates/electron/release.yml) as the
+starting point.
+
+A tag captures the workflow at that commit. Re-running an old tag will not pick
+up a later workflow or notarization change; cut a new patch tag instead.
+
 ## Tauri workflow pattern
 
 ```yaml
@@ -208,6 +230,10 @@ key is present.
   assessment-bench-desktop verified with API-key notarization on `macos-15`.
   These now have a `notarize-check` workflow_dispatch job that signs, notarizes,
   and verifies without creating a release.
+- Electron batch D: character-craft-lite, feed-forward-desktop,
+  assessment-lens-desktop, curriculum-curator verified.
+  bowerbird and cite-sight are deferred: both still use a separate manual DMG
+  notarization step with Apple ID and need a dedicated API-key rewrite.
 
 ### Keychain auto-lock
 

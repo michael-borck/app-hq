@@ -6,6 +6,8 @@
 - [ ] CI passes typecheck, lint, tests, build.
 - [ ] macOS signing certificate and API key present on packaging step.
 - [ ] Electron macOS runner pinned (`macos-15` at time of writing).
+- [ ] Workflow changes are on the release commit; a tag captures the workflow.
+- [ ] Manual `notarize-check` passed (does not publish).
 - [ ] Tauri updater key present if the app uses updates (per app).
 - [ ] Windows signing configured if required.
 - [ ] Unsigned fallback clears all Apple/notarization env vars.

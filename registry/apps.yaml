@@ -8,190 +8,190 @@ apps:
     stack: electron
     mode: local
     signing_workflow: api-key
-    notes: Electron pilot; macos-15; notarization verified.
+    notes: "Electron pilot; macos-15; notarization verified."
 
   - repo: michael-borck/lesson-loom
     stack: tauri
     mode: local
     signing_workflow: api-key
-    notes: Tauri pilot verified on v0.3.1; signed and notarized.
+    notes: "Tauri pilot verified on v0.3.1; signed and notarized."
 
   - repo: michael-borck/debrief
     stack: electron
     mode: local
     signing_workflow: api-key
-    notes: Batch A verified with API-key notarization on macos-15.
+    notes: "Batch A verified with API-key notarization on macos-15."
 
   - repo: michael-borck/cabinet
     stack: electron
     mode: local
     signing_workflow: api-key
-    notes: Batch A verified with API-key notarization on macos-15.
+    notes: "Batch A verified with API-key notarization on macos-15."
 
   - repo: michael-borck/career-compass
     stack: electron
     mode: local
     signing_workflow: api-key
-    notes: Batch A verified with API-key notarization on macos-15.
+    notes: "Batch A verified with API-key notarization on macos-15."
 
   - repo: michael-borck/playable-lessons
     stack: electron
     mode: local
     signing_workflow: api-key
-    notes: Batch B verified; also ships Docker/self-hosted web and CLI.
+    notes: "Batch B verified; v0.9.0 released with API-key notarization; also ships Docker/self-hosted web and CLI."
 
   - repo: michael-borck/study-buddy
     stack: electron
     mode: local
     signing_workflow: api-key
-    notes: Batch B verified.
+    notes: "Batch B verified."
 
   - repo: michael-borck/talk-buddy
     stack: electron
     mode: local
     signing_workflow: api-key
-    notes: Batch B verified.
+    notes: "Batch B verified."
 
   - repo: michael-borck/insight-lens
     stack: electron
     mode: local
     signing_workflow: api-key
-    notes: Batch C verified with API-key notarization on macos-15.
+    notes: "Batch C verified with API-key notarization on macos-15."
 
   - repo: michael-borck/thematic-lens
     stack: electron
     mode: local
     signing_workflow: api-key
-    notes: Batch C verified with API-key notarization on macos-15.
+    notes: "Batch C verified with API-key notarization on macos-15."
 
   - repo: michael-borck/assessment-bench-desktop
     stack: electron
     mode: local
     signing_workflow: api-key
-    notes: Batch C verified with API-key notarization on macos-15.
+    notes: "Batch C verified with API-key notarization on macos-15."
 
   - repo: michael-borck/lens-desktop
     stack: electron
     mode: local
     signing_workflow: api-key
-    notes: Batch C verified with API-key notarization on macos-15.
+    notes: "Batch C verified with API-key notarization on macos-15."
 
   - repo: michael-borck/document-lens
     stack: tauri
     mode: local
     signing_workflow: tauri-legacy
-    notes: Sidecar/PyInstaller; own updater key; dormant Azure Windows signing.
+    notes: "Sidecar/PyInstaller; own updater key; dormant Azure Windows signing."
 
   - repo: michael-borck/character-craft-lite
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Batch D.
+    signing_workflow: api-key
+    notes: "Batch D verified with API-key notarization on macos-15."
 
   - repo: michael-borck/feed-forward-desktop
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Private practice wrapper around Feed Forward engine; Python sidecar.
+    signing_workflow: api-key
+    notes: "Batch D verified with API-key notarization; Python sidecar wrapper."
 
   - repo: michael-borck/assessment-lens-desktop
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Recent release failures; batch D.
+    signing_workflow: api-key
+    notes: "Batch D verified with API-key notarization on macos-15."
 
   - repo: michael-borck/cite-sight
     stack: electron
     mode: local
     signing_workflow: legacy
-    notes: Release cancelled; needs investigation.
+    notes: "Deferred: manual DMG notarization flow; needs redesign and investigation."
 
   - repo: michael-borck/bowerbird
     stack: electron
     mode: local
     signing_workflow: legacy
-    notes: Workflow references secrets that were missing; no recent release.
+    notes: "Deferred: release uses separate manual DMG notarization; needs a second pass."
 
   - repo: michael-borck/curriculum-curator
     stack: electron
     mode: hybrid
-    signing_workflow: none
-    notes: LOCAL_MODE + institutional server; desktop wrapper; Docker.
+    signing_workflow: api-key
+    notes: "Batch D verified; desktop now signed/notarized, alongside LOCAL_MODE + server deployments."
 
   - repo: michael-borck/cairn
     stack: tauri
     mode: local
     signing_workflow: none
-    notes: Content packs via cairn-packs.
+    notes: "Content packs via cairn-packs."
 
   - repo: michael-borck/case-crafter
     stack: tauri
     mode: local
     signing_workflow: none
-    notes: Release workflow failing.
+    notes: "Release workflow failing."
 
   - repo: michael-borck/ethos-mirror
     stack: tauri
     mode: local
     signing_workflow: tauri-legacy
-    notes: Tauri batch A.
+    notes: "Tauri batch A."
 
   - repo: michael-borck/Knotebook
     stack: tauri
     mode: local
     signing_workflow: none
-    notes: Static store via knotebook-store.
+    notes: "Static store via knotebook-store."
 
   - repo: michael-borck/limn
     stack: tauri
     mode: local
     signing_workflow: tauri-legacy
-    notes: Tauri batch A.
+    notes: "Tauri batch A."
 
   - repo: michael-borck/slide-stream
     stack: tauri
     mode: local
     signing_workflow: tauri-legacy
-    notes: Tauri batch B.
+    notes: "Tauri batch B."
 
   - repo: michael-borck/venture-lab
     stack: tauri
     mode: local
     signing_workflow: tauri-legacy
-    notes: Workflow does not currently consume signing secrets.
+    notes: "Workflow does not currently consume signing secrets."
 
   - repo: michael-borck/video-to-guide
     stack: tauri
     mode: local
     signing_workflow: none
-    notes: Release workflow not recently exercised.
+    notes: "Release workflow not recently exercised."
 
   - repo: retroverse-studios/astron
     stack: tauri
     mode: local
     signing_workflow: tauri-legacy
-    notes: Own updater key.
+    notes: "Own updater key."
 
   - repo: retroverse-studios/karaoke-stage
     stack: tauri
     mode: local
     signing_workflow: none
-    notes: Unsigned releases.
+    notes: "Unsigned releases."
 
   - repo: retroverse-studios/numeron
     stack: tauri
     mode: local
     signing_workflow: tauri-legacy
-    notes: Own updater key.
+    notes: "Own updater key."
 
 # Content-store companions (not desktop apps)
 services:
   - repo: michael-borck/lorekeeper-packs
     pattern: static-pack-store
-    notes: PR submissions, local signing, static catalog.
+    notes: "PR submissions, local signing, static catalog."
   - repo: michael-borck/cairn-packs
     pattern: static-pack-store
-    notes: Static catalog + CI hash verification.
+    notes: "Static catalog + CI hash verification."
   - repo: michael-borck/knotebook-store
     pattern: static-pack-store
-    notes: Signed catalogue; private key stays local.
+    notes: "Signed catalogue; private key stays local."

@@ -20,6 +20,10 @@ macOS 26 and broke electron-builder 24's temporary-keychain import. Pin
 - Draft release by default; publish after all platform assets are attached.
 - Never reuse a tag for a different commit. If CI failed and no release was
   created, force-updating the tag is acceptable; otherwise cut a new patch.
+- A tag captures the workflow at that commit. Re-running an old tag does not
+  pick up later workflow/notarization changes; cut a new patch tag.
+- A manual `workflow_dispatch` run is for the `notarize-check` credential test
+  only. It should not create a release or publish packages.
 
 ## Standard release jobs
 
