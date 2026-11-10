@@ -55,26 +55,26 @@ apps:
   - repo: michael-borck/insight-lens
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Lens suite; batch C.
+    signing_workflow: api-key
+    notes: Batch C verified with API-key notarization on macos-15.
 
   - repo: michael-borck/thematic-lens
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Lens suite; batch C.
+    signing_workflow: api-key
+    notes: Batch C verified with API-key notarization on macos-15.
 
   - repo: michael-borck/assessment-bench-desktop
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Lens suite; batch C.
+    signing_workflow: api-key
+    notes: Batch C verified with API-key notarization on macos-15.
 
   - repo: michael-borck/lens-desktop
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Lens suite; batch C.
+    signing_workflow: api-key
+    notes: Batch C verified with API-key notarization on macos-15.
 
   - repo: michael-borck/document-lens
     stack: tauri
