@@ -37,20 +37,20 @@ apps:
   - repo: michael-borck/playable-lessons
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Batch B; also ships Docker/self-hosted web and CLI.
+    signing_workflow: api-key
+    notes: Batch B verified; also ships Docker/self-hosted web and CLI.
 
   - repo: michael-borck/study-buddy
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Batch B.
+    signing_workflow: api-key
+    notes: Batch B verified.
 
   - repo: michael-borck/talk-buddy
     stack: electron
     mode: local
-    signing_workflow: legacy
-    notes: Batch B.
+    signing_workflow: api-key
+    notes: Batch B verified.
 
   - repo: michael-borck/insight-lens
     stack: electron

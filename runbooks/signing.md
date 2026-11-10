@@ -202,6 +202,23 @@ key is present.
 - book-forge: Electron pilot signed + notarized with API key on `macos-15`.
 - Electron batch A: debrief, cabinet, career-compass verified with API-key
   notarization on `macos-15` (career-compass DMG checked with spctl/stapler).
+- Electron batch B: playable-lessons, study-buddy, talk-buddy verified with
+  API-key notarization on `macos-15`.
+
+### Keychain auto-lock
+
+If a workflow imports the certificate into a temporary `build.keychain` and then
+spends 10+ minutes building before signing, unlock it for the whole job:
+
+```bash
+security create-keychain -p actions build.keychain
+security default-keychain -s build.keychain
+security unlock-keychain -p actions build.keychain
+security set-keychain-settings -lut 21600 build.keychain
+```
+
+Without the timeout, codesign can hang on a locked keychain; study-buddy hit
+this and needed a 15-minute retry timeout to expose it.
 - lesson-loom: Tauri pilot verified on v0.3.1 (both macOS arches notarized;
   `spctl` reports Notarized Developer ID).
 - Legacy `APPLE_ID` / `APPLE_APP_SPECIFIC_PASSWORD` remain in some repos until
