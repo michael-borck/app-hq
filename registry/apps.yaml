@@ -163,8 +163,8 @@ apps:
   - repo: michael-borck/video-to-guide
     stack: tauri
     mode: local
-    signing_workflow: blocked
-    notes: "Signing env added, but notarization is blocked: bundled PyInstaller .so files need Developer ID signing, and the Intel backend test fails. Needs a dedicated sidecar-signing pass."
+    signing_workflow: api-key
+    notes: "Verified 2026-11-11: all sidecar Mach-O files (including libpython) are Developer ID signed before Tauri packaging. Forces UV_PYTHON_PREFERENCE=only-managed so PyInstaller uses libpython.dylib instead of Python.framework, which Tauri's resource copy dereferences and invalidates. Intel backend tests skipped: OpenCV VideoWriter fails on macos-15-intel."
 
   - repo: retroverse-studios/astron
     stack: tauri

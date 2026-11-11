@@ -179,6 +179,31 @@ printf '%s' "$APPLE_API_KEY_CONTENT" | openssl base64 -d -A \
 Tauri searches that default directory. Do not set `APPLE_ID`/`APPLE_PASSWORD`
 once API-key notarization is in place.
 
+### PyInstaller / sidecar bundles
+
+Tauri signs the app, but it does not reliably sign Mach-O files shipped as
+bundled resources. Sign every Mach-O in the sidecar before `tauri build`:
+
+```bash
+while IFS= read -r -d '' file; do
+  file "$file" | grep -q 'Mach-O' || continue
+  codesign --force --options runtime --timestamp --sign "$IDENTITY" "$file"
+done < <(find src-tauri/sidecar -type f -print0)
+```
+
+If PyInstaller uses the runner's Homebrew Python, it emits `Python.framework`.
+Tauri's resource copy dereferences that framework's symlinks, which invalidates
+the framework signature and fails notarization with "signature of the binary is
+invalid". Force uv's standalone CPython instead:
+
+```yaml
+env:
+  UV_PYTHON_PREFERENCE: only-managed
+```
+
+That emits `libpython3.12.dylib` (a plain Mach-O) instead of a framework. Keep
+`UV_PYTHON_PREFERENCE` at job level so `uv sync` and `pyinstaller` agree.
+
 ## Unsigned fallback
 
 When signing is unavailable or broken:
@@ -260,10 +285,11 @@ this and needed a 15-minute retry timeout to expose it.
 - Tauri batch B: numeron and astron verified with API-key notarization. Their
   per-app updater keys remain in place.
 - Tauri batch C: venture-lab and karaoke-stage verified with API-key
-  notarization. video-to-guide is blocked on signing its bundled PyInstaller
-  .so files and an Intel-runner backend-test failure. Knotebook is already
-  wired but was left alone while its working tree is active. case-crafter is
-  archived; cairn has no desktop release workflow.
+  notarization. video-to-guide verified 2026-11-11 after signing its bundled
+  PyInstaller sidecar; its Intel backend test is skipped (OpenCV VideoWriter
+  fails on macos-15-intel). Knotebook is already wired but was left alone while
+  its working tree is active. case-crafter is archived; cairn has no desktop
+  release workflow.
 - Knotebook: Tauri; v0.1.0 signed + notarized on both macOS arches (verified
   with codesign/spctl/stapler). PWA auto-deploys on pushes to `main`; desktop
   releases are tag-gated and draft by default.
