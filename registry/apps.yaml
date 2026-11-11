@@ -122,13 +122,13 @@ apps:
     stack: tauri
     mode: local
     signing_workflow: none
-    notes: "Content packs via cairn-packs."
+    notes: "No desktop release workflow yet; signing deferred until one exists."
 
   - repo: michael-borck/case-crafter
     stack: tauri
     mode: local
     signing_workflow: none
-    notes: "Release workflow failing."
+    notes: "Archived: superseded by Playable Lessons. No signing work."
 
   - repo: michael-borck/ethos-mirror
     stack: tauri
@@ -140,7 +140,7 @@ apps:
     stack: tauri
     mode: local
     signing_workflow: api-key
-    notes: "Tauri; v0.1.0 signed/notarized on both macOS arches; PWA and store deploy to Pages."
+    notes: "Already wired for API-key notarization; active local working tree, not re-verified this session."
 
   - repo: michael-borck/limn
     stack: tauri
@@ -157,14 +157,14 @@ apps:
   - repo: michael-borck/venture-lab
     stack: tauri
     mode: local
-    signing_workflow: tauri-legacy
-    notes: "Workflow does not currently consume signing secrets."
+    signing_workflow: api-key
+    notes: "Tauri batch C verified with API-key notarization; manual dispatch uploads artifacts."
 
   - repo: michael-borck/video-to-guide
     stack: tauri
     mode: local
-    signing_workflow: none
-    notes: "Release workflow not recently exercised."
+    signing_workflow: blocked
+    notes: "Signing env added, but notarization is blocked: bundled PyInstaller .so files need Developer ID signing, and the Intel backend test fails. Needs a dedicated sidecar-signing pass."
 
   - repo: retroverse-studios/astron
     stack: tauri
@@ -175,8 +175,8 @@ apps:
   - repo: retroverse-studios/karaoke-stage
     stack: tauri
     mode: local
-    signing_workflow: none
-    notes: "Unsigned releases."
+    signing_workflow: api-key
+    notes: "Tauri batch C verified with API-key notarization; previously unsigned."
 
   - repo: retroverse-studios/numeron
     stack: tauri

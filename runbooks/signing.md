@@ -259,6 +259,11 @@ this and needed a 15-minute retry timeout to expose it.
   with artifact uploads; document-lens creates a draft release on dispatch.
 - Tauri batch B: numeron and astron verified with API-key notarization. Their
   per-app updater keys remain in place.
+- Tauri batch C: venture-lab and karaoke-stage verified with API-key
+  notarization. video-to-guide is blocked on signing its bundled PyInstaller
+  .so files and an Intel-runner backend-test failure. Knotebook is already
+  wired but was left alone while its working tree is active. case-crafter is
+  archived; cairn has no desktop release workflow.
 - Knotebook: Tauri; v0.1.0 signed + notarized on both macOS arches (verified
   with codesign/spctl/stapler). PWA auto-deploys on pushes to `main`; desktop
   releases are tag-gated and draft by default.
