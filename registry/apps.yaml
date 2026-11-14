@@ -140,7 +140,7 @@ apps:
     stack: tauri
     mode: local
     signing_workflow: api-key
-    notes: "Already wired for API-key notarization; active local working tree, not re-verified this session."
+    notes: "Tauri; v0.1.5 verified 2026-11-14, signed/notarized on both macOS arches; preflight-gated tag releases; PWA and store deploy to Pages."
 
   - repo: michael-borck/limn
     stack: tauri
