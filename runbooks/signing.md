@@ -159,6 +159,32 @@ up a later workflow or notarization change; cut a new patch tag instead.
 
 ## Tauri workflow pattern
 
+### Shared implementation
+
+The fleet implementation is in
+[`michael-borck/actions`](https://github.com/michael-borck/actions):
+
+- `tauri-release.yml` — tag push runs preflight → macOS arm64/Intel, Ubuntu
+  22.04, Windows → API-key signing/notarization → draft release → publish.
+  Manual dispatch runs **notarize-check only**.
+- `apple-signing` — validates the canonical secrets and writes the `.p8` to
+  `~/.appstoreconnect/private_keys`.
+
+Caller:
+
+```yaml
+jobs:
+  release:
+    uses: michael-borck/actions/.github/workflows/tauri-release.yml@main
+    secrets: inherit
+    with:
+      product-name: App
+      preflight-command: npm run typecheck && npm run lint && npm test
+      updater: true
+```
+
+The underlying pattern the shared workflow implements:
+
 ```yaml
 env:
   APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
