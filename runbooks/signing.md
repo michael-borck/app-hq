@@ -162,7 +162,7 @@ up a later workflow or notarization change; cut a new patch tag instead.
 ### Shared implementation
 
 The fleet implementation is in
-[`michael-borck/actions`](https://github.com/michael-borck/actions):
+[`michael-borck/app-hq`](https://github.com/michael-borck/app-hq):
 
 - `tauri-release.yml` — tag push runs preflight → macOS arm64/Intel, Ubuntu
   22.04, Windows → API-key signing/notarization → draft release → publish.
@@ -175,7 +175,7 @@ Caller:
 ```yaml
 jobs:
   release:
-    uses: michael-borck/actions/.github/workflows/tauri-release.yml@main
+    uses: michael-borck/app-hq/.github/workflows/tauri-release.yml@main
     with:
       product-name: App
       preflight-command: npm run typecheck && npm run lint && npm test
@@ -194,7 +194,6 @@ jobs:
 
 `secrets: inherit` only works within the same organization or enterprise. Use the
 named mapping for `retroverse-studios` or any other owner.
-```
 
 The underlying pattern the shared workflow implements:
 

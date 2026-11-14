@@ -12,6 +12,7 @@ This is not a monorepo and not a business plan. App code stays in its own repos.
   [decision-tree.md](decision-tree.md)
 - **Shipping a release?** [checklists/release.md](checklists/release.md) and
   [runbooks/release.md](runbooks/release.md)
+- **Releasing a Tauri app?** [templates/tauri/release.yml](templates/tauri/release.yml)
 - **Signing broken?** [runbooks/signing.md](runbooks/signing.md)
 - **Looking for an existing pattern?** [patterns/](patterns/)
 - **What apps exist and how are they built?** [registry/apps.yaml](registry/apps.yaml)
@@ -36,6 +37,7 @@ This is not a monorepo and not a business plan. App code stays in its own repos.
 ## Repository map
 
 ```text
+.github/             shared reusable workflows and composite actions
 decision-tree.md
 patterns/            recurring product and architecture shapes
 runbooks/            signing, release operations

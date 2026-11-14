@@ -1,0 +1,304 @@
+name: Tauri release (reusable)
+
+# Shared Tauri desktop release workflow.
+#
+# Caller (tag -> full release; manual -> notarize-check only):
+#
+#   name: Release desktop
+#   on:
+#     push:
+#       tags: ['v*']
+#     workflow_dispatch:
+#   permissions:
+#     contents: write
+#   jobs:
+#     release:
+#       uses: michael-borck/app-hq/.github/workflows/tauri-release.yml@main
+#       secrets: inherit
+#       with:
+#         product-name: Knotebook
+#         preflight-command: npm run typecheck && npm run lint && npm run smoke
+#         updater: true
+#
+# Required secrets (canonical, fleet-wide):
+#   APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD, APPLE_SIGNING_IDENTITY,
+#   APPLE_TEAM_ID, APPLE_API_KEY, APPLE_API_ISSUER, APPLE_API_KEY_CONTENT
+# Per-app, required only when updater: true:
+#   TAURI_SIGNING_PRIVATE_KEY, TAURI_SIGNING_PRIVATE_KEY_PASSWORD
+
+on:
+  workflow_call:
+    inputs:
+      product-name:
+        description: Product name from tauri.conf.json
+        required: true
+        type: string
+      preflight-command:
+        description: Commands to run after npm ci on Ubuntu
+        required: false
+        type: string
+        default: npm run build
+      pre-build-command:
+        description: Optional macOS-only command before tauri-action (sidecar signing, etc.)
+        required: false
+        type: string
+        default: ''
+      updater:
+        description: Sign and publish Tauri updater artifacts
+        required: false
+        type: boolean
+        default: false
+      node-version:
+        description: Node.js version
+        required: false
+        type: string
+        default: '22'
+      install-command:
+        description: Dependency install command
+        required: false
+        type: string
+        default: npm ci
+      cache:
+        description: actions/setup-node cache (npm, pnpm, yarn, or empty)
+        required: false
+        type: string
+        default: npm
+      matrix:
+        description: JSON array of {platform,target,args}
+        required: false
+        type: string
+        default: |
+          [
+            {"platform":"macos-15","target":"aarch64-apple-darwin","args":"--target aarch64-apple-darwin"},
+            {"platform":"macos-15-intel","target":"x86_64-apple-darwin","args":"--target x86_64-apple-darwin"},
+            {"platform":"ubuntu-22.04","target":"","args":"--bundles deb,appimage"},
+            {"platform":"windows-latest","target":"","args":""}
+          ]
+    secrets:
+      APPLE_CERTIFICATE:
+        required: false
+      APPLE_CERTIFICATE_PASSWORD:
+        required: false
+      APPLE_SIGNING_IDENTITY:
+        required: false
+      APPLE_TEAM_ID:
+        required: false
+      APPLE_API_KEY:
+        required: false
+      APPLE_API_ISSUER:
+        required: false
+      APPLE_API_KEY_CONTENT:
+        required: false
+      TAURI_SIGNING_PRIVATE_KEY:
+        required: false
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD:
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  preflight:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.cache }}
+      - run: ${{ inputs.install-command }}
+      - name: Preflight
+        if: inputs.preflight-command != ''
+        shell: bash
+        run: ${{ inputs.preflight-command }}
+
+  build:
+    if: github.event_name == 'push'
+    needs: preflight
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.matrix) }}
+    runs-on: ${{ matrix.platform }}
+    env:
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.cache }}
+
+      - name: Rust (targeted)
+        if: matrix.target != ''
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust (host)
+        if: matrix.target == ''
+        uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
+
+      - name: Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libxdo-dev \
+            libssl-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - run: ${{ inputs.install-command }}
+
+      - name: Require updater key
+        if: inputs.updater
+        shell: bash
+        run: |
+          if [ -z "${TAURI_SIGNING_PRIVATE_KEY}" ]; then
+            echo "::error::Missing TAURI_SIGNING_PRIVATE_KEY. Add the per-app updater key secret."
+            exit 1
+          fi
+
+      - uses: michael-borck/app-hq/.github/actions/apple-signing@main
+        if: runner.os == 'macOS'
+
+      - name: Pre-build (macOS)
+        if: runner.os == 'macOS' && inputs.pre-build-command != ''
+        shell: bash
+        run: ${{ inputs.pre-build-command }}
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: '${{ inputs.product-name }} ${{ github.ref_name }}'
+          releaseBody: |
+            ${{ inputs.product-name }} ${{ github.ref_name }}.
+
+            macOS builds are signed and notarized. Windows and Linux builds are
+            unsigned.
+          releaseDraft: true
+          prerelease: false
+          includeUpdaterJson: ${{ inputs.updater }}
+          args: ${{ matrix.args }}
+
+      - name: Verify macOS signature
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          DMG=$(ls "src-tauri/target/${{ matrix.target }}/release/bundle/dmg/"*.dmg | head -1)
+          MNT=$(mktemp -d)
+          trap 'hdiutil detach "$MNT" >/dev/null 2>&1 || true' EXIT
+          hdiutil attach "$DMG" -nobrowse -readonly -mountpoint "$MNT" >/dev/null
+          APP=$(ls -d "$MNT"/*.app | head -1)
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          spctl --assess --type execute --verbose=4 "$APP"
+          for attempt in 1 2 3; do
+            xcrun stapler validate "$APP" && break
+            [ "$attempt" -eq 3 ] && exit 1
+            echo "stapler validate failed (attempt $attempt); retrying..."
+            sleep 15
+          done
+          ls -lh "$DMG"
+
+  notarize-check:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    env:
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.cache }}
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            src-tauri -> target
+
+      - run: ${{ inputs.install-command }}
+
+      - name: Require updater key
+        if: inputs.updater
+        shell: bash
+        run: |
+          if [ -z "${TAURI_SIGNING_PRIVATE_KEY}" ]; then
+            echo "::error::Missing TAURI_SIGNING_PRIVATE_KEY. Add the per-app updater key secret."
+            exit 1
+          fi
+
+      - uses: michael-borck/app-hq/.github/actions/apple-signing@main
+
+      - name: Pre-build (macOS)
+        if: inputs.pre-build-command != ''
+        shell: bash
+        run: ${{ inputs.pre-build-command }}
+
+      - name: Build, sign and notarize
+        run: npx tauri build --target aarch64-apple-darwin --bundles dmg
+
+      - name: Verify signature and notarization
+        shell: bash
+        run: |
+          DMG=$(ls src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg | head -1)
+          MNT=$(mktemp -d)
+          trap 'hdiutil detach "$MNT" >/dev/null 2>&1 || true' EXIT
+          hdiutil attach "$DMG" -nobrowse -readonly -mountpoint "$MNT" >/dev/null
+          APP=$(ls -d "$MNT"/*.app | head -1)
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          spctl --assess --type execute --verbose=4 "$APP"
+          for attempt in 1 2 3; do
+            xcrun stapler validate "$APP" && break
+            [ "$attempt" -eq 3 ] && exit 1
+            echo "stapler validate failed (attempt $attempt); retrying..."
+            sleep 15
+          done
+          ls -lh "$DMG"
+
+  finalize:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false
