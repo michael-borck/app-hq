@@ -176,11 +176,24 @@ Caller:
 jobs:
   release:
     uses: michael-borck/actions/.github/workflows/tauri-release.yml@main
-    secrets: inherit
     with:
       product-name: App
       preflight-command: npm run typecheck && npm run lint && npm test
       updater: true
+    secrets:
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+```
+
+`secrets: inherit` only works within the same organization or enterprise. Use the
+named mapping for `retroverse-studios` or any other owner.
 ```
 
 The underlying pattern the shared workflow implements:
