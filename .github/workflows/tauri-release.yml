@@ -84,6 +84,16 @@ on:
         required: false
         type: string
         default: ''
+      setup-command:
+        description: Command to run before dependency install
+        required: false
+        type: string
+        default: ''
+      build-command:
+        description: Workspace or sidecar build command, before Tauri
+        required: false
+        type: string
+        default: ''
       release-body:
         description: Custom release body; defaults to a generic note
         required: false
@@ -122,12 +132,14 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           cache: ${{ inputs.cache }}
+      - name: Setup
+        if: inputs.setup-command != ''
+        shell: bash
+        run: ${{ inputs.setup-command }}
       - if: inputs.install-command != ''
-        working-directory: ${{ inputs.project-path }}
         run: ${{ inputs.install-command }}
       - name: Preflight
         if: inputs.preflight-command != ''
-        working-directory: ${{ inputs.project-path }}
         shell: bash
         run: ${{ inputs.preflight-command }}
 
@@ -155,6 +167,11 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           cache: ${{ inputs.cache }}
+
+      - name: Setup
+        if: inputs.setup-command != ''
+        shell: bash
+        run: ${{ inputs.setup-command }}
 
       - name: Rust (targeted)
         if: matrix.target != ''
@@ -188,7 +205,6 @@ jobs:
             patchelf
 
       - if: inputs.install-command != ''
-        working-directory: ${{ inputs.project-path }}
         run: ${{ inputs.install-command }}
 
       - name: Require updater key
@@ -203,9 +219,13 @@ jobs:
       - uses: michael-borck/app-hq/.github/actions/apple-signing@main
         if: runner.os == 'macOS'
 
+      - name: Build hook
+        if: inputs.build-command != ''
+        shell: bash
+        run: ${{ inputs.build-command }}
+
       - name: Pre-build (macOS)
         if: runner.os == 'macOS' && inputs.pre-build-command != ''
-        working-directory: ${{ inputs.project-path }}
         shell: bash
         run: ${{ inputs.pre-build-command }}
 
@@ -266,6 +286,11 @@ jobs:
           node-version: ${{ inputs.node-version }}
           cache: ${{ inputs.cache }}
 
+      - name: Setup
+        if: inputs.setup-command != ''
+        shell: bash
+        run: ${{ inputs.setup-command }}
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-apple-darwin
@@ -276,7 +301,6 @@ jobs:
             ${{ inputs.project-path }}/src-tauri -> target
 
       - if: inputs.install-command != ''
-        working-directory: ${{ inputs.project-path }}
         run: ${{ inputs.install-command }}
 
       - name: Require updater key
@@ -290,9 +314,13 @@ jobs:
 
       - uses: michael-borck/app-hq/.github/actions/apple-signing@main
 
+      - name: Build hook
+        if: inputs.build-command != ''
+        shell: bash
+        run: ${{ inputs.build-command }}
+
       - name: Pre-build (macOS)
         if: inputs.pre-build-command != ''
-        working-directory: ${{ inputs.project-path }}
         shell: bash
         run: ${{ inputs.pre-build-command }}
 

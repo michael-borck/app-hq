@@ -14,6 +14,8 @@ jobs:
   release:
     uses: michael-borck/app-hq/.github/workflows/tauri-release.yml@main
     with:
+      # Nested apps: project-path / tauri-script.
+      # Workspaces: install-command + build-command.
       product-name: App
       preflight-command: npm run typecheck && npm run lint && npm test
       updater: false

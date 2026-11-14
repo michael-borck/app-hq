@@ -176,6 +176,11 @@ If that directory has no `package.json`, also set
 empty. Extra release assets (standalone HTML, stable bundle names) belong in a
 job with `needs: release` that attaches them after publish.
 
+pnpm workspace apps use `install-command: corepack enable && pnpm install
+--frozen-lockfile`, `cache: ''`, and `build-command` for the workspace build.
+Sidecar apps use `setup-command`/`build-command` for their backend build/sign
+step; `build-command` runs on every platform after Apple signing.
+
 Caller:
 
 ```yaml
