@@ -164,6 +164,7 @@ env:
   APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
   APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
   APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+  APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
   APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
   APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
 ```
@@ -290,9 +291,9 @@ this and needed a 15-minute retry timeout to expose it.
   fails on macos-15-intel). Knotebook is already wired but was left alone while
   its working tree is active. case-crafter is archived; cairn has no desktop
   release workflow.
-- Knotebook: Tauri; v0.1.0 signed + notarized on both macOS arches (verified
+- Knotebook: Tauri; v0.1.5 signed + notarized on both macOS arches (verified
   with codesign/spctl/stapler). PWA auto-deploys on pushes to `main`; desktop
-  releases are tag-gated and draft by default.
+  releases are tag-gated, preflight-gated and draft by default.
 - Legacy `APPLE_ID` / `APPLE_APP_SPECIFIC_PASSWORD` remain in some repos until
   migration; revoke exposed app-specific passwords after the Electron batch
   migration or after installing one new fallback.
