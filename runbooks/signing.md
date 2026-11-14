@@ -170,6 +170,12 @@ The fleet implementation is in
 - `apple-signing` — validates the canonical secrets and writes the `.p8` to
   `~/.appstoreconnect/private_keys`.
 
+Nested Tauri apps set `project-path` to the directory containing `src-tauri`.
+If that directory has no `package.json`, also set
+`tauri-script: npx --yes @tauri-apps/cli@^2` and leave `install-command`/`cache`
+empty. Extra release assets (standalone HTML, stable bundle names) belong in a
+job with `needs: release` that attaches them after publish.
+
 Caller:
 
 ```yaml

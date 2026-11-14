@@ -74,6 +74,21 @@ on:
             {"platform":"ubuntu-22.04","target":"","args":"--bundles deb,appimage"},
             {"platform":"windows-latest","target":"","args":""}
           ]
+      project-path:
+        description: Directory containing src-tauri (default .)
+        required: false
+        type: string
+        default: .
+      tauri-script:
+        description: Command prefix for tauri-action (e.g. npx tauri)
+        required: false
+        type: string
+        default: ''
+      release-body:
+        description: Custom release body; defaults to a generic note
+        required: false
+        type: string
+        default: ''
     secrets:
       APPLE_CERTIFICATE:
         required: false
@@ -107,9 +122,12 @@ jobs:
         with:
           node-version: ${{ inputs.node-version }}
           cache: ${{ inputs.cache }}
-      - run: ${{ inputs.install-command }}
+      - if: inputs.install-command != ''
+        working-directory: ${{ inputs.project-path }}
+        run: ${{ inputs.install-command }}
       - name: Preflight
         if: inputs.preflight-command != ''
+        working-directory: ${{ inputs.project-path }}
         shell: bash
         run: ${{ inputs.preflight-command }}
 
@@ -151,7 +169,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            src-tauri -> target
+            ${{ inputs.project-path }}/src-tauri -> target
 
       - name: Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
@@ -169,7 +187,9 @@ jobs:
             librsvg2-dev \
             patchelf
 
-      - run: ${{ inputs.install-command }}
+      - if: inputs.install-command != ''
+        working-directory: ${{ inputs.project-path }}
+        run: ${{ inputs.install-command }}
 
       - name: Require updater key
         if: inputs.updater
@@ -185,6 +205,7 @@ jobs:
 
       - name: Pre-build (macOS)
         if: runner.os == 'macOS' && inputs.pre-build-command != ''
+        working-directory: ${{ inputs.project-path }}
         shell: bash
         run: ${{ inputs.pre-build-command }}
 
@@ -192,10 +213,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
+          projectPath: ${{ inputs.project-path }}
+          tauriScript: ${{ inputs.tauri-script }}
           tagName: ${{ github.ref_name }}
           releaseName: '${{ inputs.product-name }} ${{ github.ref_name }}'
           releaseBody: |
-            ${{ inputs.product-name }} ${{ github.ref_name }}.
+            ${{ inputs.release-body || format('{0} {1}.', inputs.product-name, github.ref_name) }}
 
             macOS builds are signed and notarized. Windows and Linux builds are
             unsigned.
@@ -208,7 +231,7 @@ jobs:
         if: runner.os == 'macOS'
         shell: bash
         run: |
-          DMG=$(ls "src-tauri/target/${{ matrix.target }}/release/bundle/dmg/"*.dmg | head -1)
+          DMG=$(ls "${{ inputs.project-path }}/src-tauri/target/${{ matrix.target }}/release/bundle/dmg/"*.dmg | head -1)
           MNT=$(mktemp -d)
           trap 'hdiutil detach "$MNT" >/dev/null 2>&1 || true' EXIT
           hdiutil attach "$DMG" -nobrowse -readonly -mountpoint "$MNT" >/dev/null
@@ -250,9 +273,11 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: |
-            src-tauri -> target
+            ${{ inputs.project-path }}/src-tauri -> target
 
-      - run: ${{ inputs.install-command }}
+      - if: inputs.install-command != ''
+        working-directory: ${{ inputs.project-path }}
+        run: ${{ inputs.install-command }}
 
       - name: Require updater key
         if: inputs.updater
@@ -267,16 +292,24 @@ jobs:
 
       - name: Pre-build (macOS)
         if: inputs.pre-build-command != ''
+        working-directory: ${{ inputs.project-path }}
         shell: bash
         run: ${{ inputs.pre-build-command }}
 
       - name: Build, sign and notarize
-        run: npx tauri build --target aarch64-apple-darwin --bundles dmg
+        working-directory: ${{ inputs.project-path }}
+        shell: bash
+        run: |
+          if [ -x node_modules/.bin/tauri ]; then
+            npx tauri build --target aarch64-apple-darwin --bundles dmg
+          else
+            npx --yes @tauri-apps/cli@^2 build --target aarch64-apple-darwin --bundles dmg
+          fi
 
       - name: Verify signature and notarization
         shell: bash
         run: |
-          DMG=$(ls src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg | head -1)
+          DMG=$(ls "${{ inputs.project-path }}/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/"*.dmg | head -1)
           MNT=$(mktemp -d)
           trap 'hdiutil detach "$MNT" >/dev/null 2>&1 || true' EXIT
           hdiutil attach "$DMG" -nobrowse -readonly -mountpoint "$MNT" >/dev/null
