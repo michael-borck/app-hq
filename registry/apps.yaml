@@ -140,7 +140,7 @@ apps:
     stack: tauri
     mode: local
     signing_workflow: api-key
-    notes: "Tauri; v0.1.5 verified 2026-11-14, signed/notarized on both macOS arches; preflight-gated tag releases; PWA and store deploy to Pages."
+    notes: "Tauri; v0.1.6 released 2026-11-15 through the shared app-hq workflow; all matrix platforms built, macOS signed/notarized; repo slug lowercase; PWA and store deploy to Pages."
 
   - repo: michael-borck/limn
     stack: tauri

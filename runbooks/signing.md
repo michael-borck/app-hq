@@ -377,12 +377,13 @@ this and needed a 15-minute retry timeout to expose it.
 - Tauri batch C: venture-lab and karaoke-stage verified with API-key
   notarization. video-to-guide verified 2026-11-11 after signing its bundled
   PyInstaller sidecar; its Intel backend test is skipped (OpenCV VideoWriter
-  fails on macos-15-intel). Knotebook is already wired but was left alone while
-  its working tree is active. case-crafter is archived; cairn has no desktop
-  release workflow.
-- Knotebook: Tauri; v0.1.5 signed + notarized on both macOS arches (verified
-  with codesign/spctl/stapler). PWA auto-deploys on pushes to `main`; desktop
-  releases are tag-gated, preflight-gated and draft by default.
+  fails on macos-15-intel). Knotebook is on the shared workflow; v0.1.6 was
+  released through it on 2026-11-15. case-crafter is archived; cairn has no
+  desktop release workflow.
+- Knotebook: Tauri; v0.1.6 released 2026-11-15 through the shared app-hq
+  workflow. All four matrix legs built; both macOS arches signed/notarized,
+  and `latest.json` reports 0.1.6. The repo slug is lowercase
+  (`michael-borck/knotebook`); PWA auto-deploys on pushes to `main`.
 - Legacy `APPLE_ID` / `APPLE_APP_SPECIFIC_PASSWORD` remain in some repos until
   migration; revoke exposed app-specific passwords after the Electron batch
   migration or after installing one new fallback.
