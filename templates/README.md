@@ -5,9 +5,10 @@ three new apps need the same starting point.
 
 Available:
 
-- `electron/` — golden release workflow with API-key signing/notarization,
-  `macos-15`, runner pin, `notarize-check` manual credential test, and a
-  draft-release flow. Based on the batch C Lens repos.
+- `electron/` — thin caller for the shared Electron release workflow
+  (`.github/workflows/electron-release.yml`), plus the `notarize.js` afterSign
+  hook and electron-builder settings. Tag push → matrix → sign/notarize →
+  draft → publish; manual dispatch → notarize-check only.
 - `tauri/` — thin caller for the shared reusable release workflow in this repo
   (`.github/workflows/tauri-release.yml`). Tag push → preflight → macOS
   arm64/Intel, Ubuntu 22.04, Windows → API-key signing/notarization → draft →
@@ -20,5 +21,6 @@ Planned:
 - `pack-store/` — static catalog, validator, PR submission template
 
 The macOS signing/notarization composite action lives in
-`.github/actions/apple-signing`. `electron/` remains the Electron-specific
-template; `tauri/` is the caller template for the shared workflow.
+`.github/actions/apple-signing`; it also writes `APPLE_API_KEY_PATH` for the
+Electron `notarize.js` hook. `electron/` and `tauri/` are caller templates for
+their shared workflows.
