@@ -213,6 +213,7 @@ jobs:
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
       ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
       GH_TOKEN: ${{ github.token }}
+      GH_OWNER: ${{ github.repository_owner }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -339,6 +340,7 @@ jobs:
       NOTARIZE_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
       ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+      GH_OWNER: ${{ github.repository_owner }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
