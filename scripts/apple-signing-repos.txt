@@ -20,7 +20,7 @@ michael-borck/talk-buddy electron
 michael-borck/cairn tauri
 michael-borck/case-crafter tauri
 michael-borck/ethos-mirror tauri
-michael-borck/Knotebook tauri
+michael-borck/knotebook tauri
 michael-borck/document-lens tauri   # has its own TAURI_SIGNING_PRIVATE_KEY
 michael-borck/lesson-loom tauri
 michael-borck/limn tauri

@@ -136,7 +136,7 @@ apps:
     signing_workflow: api-key
     notes: "Tauri batch verified with API-key notarization on macos-latest."
 
-  - repo: michael-borck/Knotebook
+  - repo: michael-borck/knotebook
     stack: tauri
     mode: local
     signing_workflow: api-key
