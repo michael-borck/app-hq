@@ -256,9 +256,13 @@ jobs:
         env:
           PLATFORM: ${{ matrix.platform }}
           TARGET_OS: ${{ matrix.os }}
-          CSC_LINK: ${{ inputs.signing-mode == 'standard' && secrets.APPLE_CERTIFICATE || '' }}
-          CSC_KEY_PASSWORD: ${{ inputs.signing-mode == 'standard' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
-        run: ${{ inputs.package-command }}
+          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ "${{ inputs.signing-mode }}" = "custom" ]; then
+            unset CSC_LINK CSC_KEY_PASSWORD
+          fi
+          ${{ inputs.package-command }}
       - name: Post-package (macOS)
         if: runner.os == 'macOS' && inputs.post-package-command != ''
         working-directory: ${{ inputs.project-path }}
@@ -374,9 +378,13 @@ jobs:
         env:
           PLATFORM: mac
           TARGET_OS: macos-15
-          CSC_LINK: ${{ inputs.signing-mode == 'standard' && secrets.APPLE_CERTIFICATE || '' }}
-          CSC_KEY_PASSWORD: ${{ inputs.signing-mode == 'standard' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
-        run: ${{ inputs.notarize-check-command }}
+          CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
+          CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          if [ "${{ inputs.signing-mode }}" = "custom" ]; then
+            unset CSC_LINK CSC_KEY_PASSWORD
+          fi
+          ${{ inputs.notarize-check-command }}
       - name: Post-package (macOS)
         if: inputs.post-package-command != ''
         working-directory: ${{ inputs.project-path }}
