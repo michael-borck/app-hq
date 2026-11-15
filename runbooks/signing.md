@@ -179,7 +179,12 @@ job with `needs: release` that attaches them after publish.
 pnpm workspace apps use `install-command: corepack enable && pnpm install
 --frozen-lockfile`, `cache: ''`, and `build-command` for the workspace build.
 Sidecar apps use `setup-command`/`build-command` for their backend build/sign
-step; `build-command` runs on every platform after Apple signing.
+step; `build-command` runs on every platform after Apple signing and receives
+`TAURI_TARGET`. Apps with a release overlay pass
+`notarize-args: --config src-tauri/tauri.release.conf.json` so the manual check
+uses the same external binaries. `HF_TOKEN` is optional for model downloads.
+Azure Windows signing is not part of the shared workflow; Windows builds are
+unsigned unless added separately.
 
 Caller:
 

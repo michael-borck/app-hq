@@ -94,6 +94,11 @@ on:
         required: false
         type: string
         default: ''
+      notarize-args:
+        description: Extra args for the manual notarize-check Tauri build
+        required: false
+        type: string
+        default: ''
       release-body:
         description: Custom release body; defaults to a generic note
         required: false
@@ -117,6 +122,8 @@ on:
       TAURI_SIGNING_PRIVATE_KEY:
         required: false
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD:
+        required: false
+      HF_TOKEN:
         required: false
 
 permissions:
@@ -161,6 +168,7 @@ jobs:
       APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -222,6 +230,8 @@ jobs:
       - name: Build hook
         if: inputs.build-command != ''
         shell: bash
+        env:
+          TAURI_TARGET: ${{ matrix.target }}
         run: ${{ inputs.build-command }}
 
       - name: Pre-build (macOS)
@@ -279,6 +289,7 @@ jobs:
       APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
       TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
       TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -317,6 +328,8 @@ jobs:
       - name: Build hook
         if: inputs.build-command != ''
         shell: bash
+        env:
+          TAURI_TARGET: aarch64-apple-darwin
         run: ${{ inputs.build-command }}
 
       - name: Pre-build (macOS)
@@ -329,9 +342,9 @@ jobs:
         shell: bash
         run: |
           if [ -x node_modules/.bin/tauri ]; then
-            npx tauri build --target aarch64-apple-darwin --bundles dmg
+            npx tauri build --target aarch64-apple-darwin --bundles dmg ${{ inputs.notarize-args }}
           else
-            npx --yes @tauri-apps/cli@^2 build --target aarch64-apple-darwin --bundles dmg
+            npx --yes @tauri-apps/cli@^2 build --target aarch64-apple-darwin --bundles dmg ${{ inputs.notarize-args }}
           fi
 
       - name: Verify signature and notarization
