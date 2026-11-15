@@ -1,0 +1,341 @@
+name: Electron release
+
+on:
+  workflow_call:
+    inputs:
+      product-name:
+        description: Display name for the release
+        required: true
+        type: string
+      node-version:
+        description: Node.js version
+        required: false
+        type: string
+        default: '22'
+      project-path:
+        description: Directory containing package.json and the electron-builder config
+        required: false
+        type: string
+        default: .
+      install-command:
+        description: Dependency install command (in project-path)
+        required: false
+        type: string
+        default: npm ci
+      cache:
+        description: actions/setup-node cache (npm, pnpm, yarn, or empty)
+        required: false
+        type: string
+        default: npm
+      setup-command:
+        description: Command before install (repo root)
+        required: false
+        type: string
+        default: ''
+      build-command:
+        description: Application build command (in project-path)
+        required: false
+        type: string
+        default: npm run build
+      sidecar-command:
+        description: Sidecar or Python build command (repo root)
+        required: false
+        type: string
+        default: ''
+      package-command:
+        description: electron-builder command; use $PLATFORM and include --publish always for builder mode
+        required: true
+        type: string
+      notarize-check-command:
+        description: Manual credential check; use --publish never
+        required: false
+        type: string
+        default: npx electron-builder --mac zip --arm64 --publish never
+      notarize-check-artifact-root:
+        description: Directory containing the built .app for verification
+        required: false
+        type: string
+        default: release
+      notarize-check-verify:
+        description: Optional custom verification command (overrides the .app checks)
+        required: false
+        type: string
+        default: ''
+      preflight-command:
+        description: Optional gate command run on Ubuntu for tag builds
+        required: false
+        type: string
+        default: ''
+      matrix:
+        description: JSON array of {os, platform}
+        required: false
+        type: string
+        default: |
+          [
+            {"os":"macos-15","platform":"mac"},
+            {"os":"ubuntu-latest","platform":"linux"},
+            {"os":"windows-latest","platform":"win"}
+          ]
+      publish-mode:
+        description: builder (electron-builder uploads) or artifacts (workflow uploads)
+        required: false
+        type: string
+        default: builder
+      artifact-globs:
+        description: Files uploaded in artifacts mode
+        required: false
+        type: string
+        default: |
+          release/*.dmg
+          release/*.zip
+          release/*.exe
+          release/*.AppImage
+          release/*.deb
+          release/*.snap
+          release/*.yml
+          release/*.yaml
+          release/*.blockmap
+      release-body:
+        description: Optional release notes
+        required: false
+        type: string
+        default: ''
+    secrets:
+      APPLE_CERTIFICATE:
+        required: false
+      APPLE_CERTIFICATE_PASSWORD:
+        required: false
+      APPLE_SIGNING_IDENTITY:
+        required: false
+      APPLE_TEAM_ID:
+        required: false
+      APPLE_API_KEY:
+        required: false
+      APPLE_API_ISSUER:
+        required: false
+      APPLE_API_KEY_CONTENT:
+        required: false
+      APPLE_ID:
+        required: false
+      APPLE_APP_SPECIFIC_PASSWORD:
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  preflight:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.cache }}
+      - name: Setup
+        if: inputs.setup-command != ''
+        shell: bash
+        run: ${{ inputs.setup-command }}
+      - name: Install
+        if: inputs.install-command != ''
+        working-directory: ${{ inputs.project-path }}
+        run: ${{ inputs.install-command }}
+      - name: Preflight
+        if: inputs.preflight-command != ''
+        working-directory: ${{ inputs.project-path }}
+        shell: bash
+        run: ${{ inputs.preflight-command }}
+
+  prepare-release:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create or reuse draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_BODY: ${{ inputs.release-body }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $GITHUB_REF_NAME already exists."
+          elif [ -n "$RELEASE_BODY" ]; then
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft \
+              --title "${{ inputs.product-name }} $GITHUB_REF_NAME" --notes "$RELEASE_BODY"
+          else
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft \
+              --title "${{ inputs.product-name }} $GITHUB_REF_NAME" --generate-notes
+          fi
+
+  build:
+    if: github.event_name == 'push'
+    needs: [preflight, prepare-release]
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(inputs.matrix) }}
+    runs-on: ${{ matrix.os }}
+    env:
+      CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
+      CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+      NOTARIZE_APPLE_ID: ${{ secrets.APPLE_ID }}
+      NOTARIZE_APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      NOTARIZE_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.cache }}
+      - name: Setup
+        if: inputs.setup-command != ''
+        shell: bash
+        run: ${{ inputs.setup-command }}
+      - name: Install
+        if: inputs.install-command != ''
+        working-directory: ${{ inputs.project-path }}
+        run: ${{ inputs.install-command }}
+      - name: Build
+        if: inputs.build-command != ''
+        working-directory: ${{ inputs.project-path }}
+        shell: bash
+        run: ${{ inputs.build-command }}
+      - name: Sidecar
+        if: inputs.sidecar-command != ''
+        shell: bash
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          TARGET_OS: ${{ matrix.os }}
+          PROJECT_PATH: ${{ inputs.project-path }}
+        run: ${{ inputs.sidecar-command }}
+      - uses: michael-borck/app-hq/.github/actions/apple-signing@main
+        if: runner.os == 'macOS'
+      - name: Package
+        working-directory: ${{ inputs.project-path }}
+        shell: bash
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          TARGET_OS: ${{ matrix.os }}
+        run: ${{ inputs.package-command }}
+      - name: Upload artifacts
+        if: inputs.publish-mode == 'artifacts'
+        uses: actions/upload-artifact@v4
+        with:
+          name: electron-${{ matrix.platform }}
+          path: ${{ inputs.artifact-globs }}
+          if-no-files-found: ignore
+          retention-days: 5
+
+  finalize:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        if: inputs.publish-mode == 'artifacts'
+        uses: actions/download-artifact@v4
+        with:
+          pattern: electron-*
+          path: artifacts
+          merge-multiple: true
+      - name: Upload artifacts to release
+        if: inputs.publish-mode == 'artifacts'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          shopt -s globstar nullglob
+          found=0
+          for f in artifacts/**/*; do
+            [ -f "$f" ] || continue
+            gh release upload "$GITHUB_REF_NAME" "$f" --clobber --repo "$GITHUB_REPOSITORY"
+            found=1
+          done
+          [ "$found" -eq 1 ] || echo "No artifacts to upload."
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+
+  notarize-check:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: macos-15
+    env:
+      CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
+      CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+      APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
+      NOTARIZE_APPLE_ID: ${{ secrets.APPLE_ID }}
+      NOTARIZE_APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+      NOTARIZE_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.cache }}
+      - name: Setup
+        if: inputs.setup-command != ''
+        shell: bash
+        run: ${{ inputs.setup-command }}
+      - name: Install
+        if: inputs.install-command != ''
+        working-directory: ${{ inputs.project-path }}
+        run: ${{ inputs.install-command }}
+      - name: Build
+        if: inputs.build-command != ''
+        working-directory: ${{ inputs.project-path }}
+        shell: bash
+        run: ${{ inputs.build-command }}
+      - name: Sidecar
+        if: inputs.sidecar-command != ''
+        shell: bash
+        env:
+          PLATFORM: mac
+          TARGET_OS: macos-15
+          PROJECT_PATH: ${{ inputs.project-path }}
+        run: ${{ inputs.sidecar-command }}
+      - uses: michael-borck/app-hq/.github/actions/apple-signing@main
+      - name: Build, sign and notarize
+        working-directory: ${{ inputs.project-path }}
+        shell: bash
+        env:
+          PLATFORM: mac
+          TARGET_OS: macos-15
+        run: ${{ inputs.notarize-check-command }}
+      - name: Verify
+        if: inputs.notarize-check-verify != ''
+        working-directory: ${{ inputs.project-path }}
+        shell: bash
+        run: ${{ inputs.notarize-check-verify }}
+      - name: Verify signature and notarization
+        if: inputs.notarize-check-verify == ''
+        shell: bash
+        run: |
+          APP=$(find "${{ inputs.notarize-check-artifact-root }}" -maxdepth 4 -type d -name '*.app' | head -1)
+          if [ -z "$APP" ]; then
+            echo "No .app found under ${{ inputs.notarize-check-artifact-root }}"
+            exit 1
+          fi
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          xcrun stapler validate "$APP"
+          spctl --assess --type execute --verbose=4 "$APP"
+          ls -ld "$APP"
