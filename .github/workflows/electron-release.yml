@@ -139,6 +139,8 @@ on:
         required: false
       APPLE_APP_SPECIFIC_PASSWORD:
         required: false
+      HF_TOKEN:
+        required: false
 
 permissions:
   contents: write
@@ -208,6 +210,7 @@ jobs:
       NOTARIZE_APPLE_ID: ${{ secrets.APPLE_ID }}
       NOTARIZE_APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
       NOTARIZE_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
       ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -334,6 +337,7 @@ jobs:
       NOTARIZE_APPLE_ID: ${{ secrets.APPLE_ID }}
       NOTARIZE_APPLE_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
       NOTARIZE_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
       ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
     steps:
       - uses: actions/checkout@v4
