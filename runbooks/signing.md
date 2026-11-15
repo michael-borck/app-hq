@@ -78,7 +78,18 @@ scripts/sync-apple-secrets.sh --apply
 
 ## Electron workflow pattern
 
-Set canonical values on the packaging step:
+### Shared implementation
+
+`.github/workflows/electron-release.yml` owns the matrix, prepare/publish,
+artifact upload, sidecar hook, and manual notarize-check. Callers pass
+`product-name`, `package-command`, and optional `project-path`,
+`install-command`, `setup-command`, `build-command`, `sidecar-command`,
+`preflight-command`, `matrix`, `notarize-check-command`, and `publish-mode`.
+Use [`templates/electron/release.yml`](../templates/electron/release.yml) as the
+thin caller. The Apple action writes `APPLE_API_KEY_PATH` for the afterSign
+hook; custom workflows must do the same.
+
+The underlying pattern sets canonical values on the packaging step:
 
 ```yaml
 env:
@@ -150,9 +161,7 @@ spctl --assess --type execute --verbose=2 "App.app"
 It does **not** create a release or upload assets, so it is safe to run after
 rotating the API key, renewing the developer membership, or changing the
 signing certificate. The release jobs are tag-gated; a manual dispatch only
-runs the credential check. Use
-[`templates/electron/release.yml`](../templates/electron/release.yml) as the
-starting point.
+runs the credential check. Use the shared workflow and the template caller as the starting point.
 
 A tag captures the workflow at that commit. Re-running an old tag will not pick
 up a later workflow or notarization change; cut a new patch tag instead.
