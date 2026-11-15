@@ -1,0 +1,22 @@
+name: Electron signing keychain
+description: Create a persistent keychain and import the Developer ID certificate for app-managed Electron signing.
+
+# Expected environment (set at the job level):
+#   APPLE_CERTIFICATE, APPLE_CERTIFICATE_PASSWORD
+
+runs:
+  using: composite
+  steps:
+    - name: Create keychain and import certificate
+      shell: bash
+      run: |
+        set -euo pipefail
+        printf '%s' "$APPLE_CERTIFICATE" | openssl base64 -d -A > /tmp/cert.p12
+        security create-keychain -p actions build.keychain || true
+        security default-keychain -s build.keychain
+        security unlock-keychain -p actions build.keychain
+        security set-keychain-settings -lut 21600 build.keychain
+        security import /tmp/cert.p12 -k build.keychain -P "$APPLE_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k actions build.keychain
+        rm -f /tmp/cert.p12
+        security find-identity -v -p codesigning

@@ -89,6 +89,32 @@ Use [`templates/electron/release.yml`](../templates/electron/release.yml) as the
 thin caller. The Apple action writes `APPLE_API_KEY_PATH` for the afterSign
 hook; custom workflows must do the same.
 
+### Custom signing modes
+
+Three modes are supported; all use the same Developer ID and API key:
+
+- **Standard** (`signing-mode: standard`, default): the workflow sets
+  `CSC_LINK`/`CSC_KEY_PASSWORD`; electron-builder imports the certificate into
+  its temporary keychain and signs the `.app`; `scripts/notarize.js`
+  (`notarize-mode: hook`) notarizes and staples the `.app`.
+- **Custom keychain** (`signing-mode: custom`): the shared
+  `electron-keychain` action creates a persistent `build.keychain`, imports the
+  certificate, and sets it as default. `CSC_LINK` is empty, so electron-builder
+  uses that identity instead of creating its own temporary keychain. Use
+  `notarize-mode: hook` when the app has `scripts/notarize.js`, or
+  `notarize-mode: builtin` when it relies on electron-builder's notarization.
+  This exists because electron-builder's temporary-keychain import can fail on
+  current macOS runners (`SecKeychainUnlock`).
+- **DMG notarization** (`signing-mode: custom`, `notarize-mode: none`,
+  `publish-mode: artifacts`, plus `post-package-command`): electron-builder
+  packages with `--publish never`; the post-package command signs, notarizes,
+  and staples the `.dmg` container before the artifacts are uploaded. Use a
+  custom `notarize-check-verify` that validates the DMG.
+
+The shared workflow uses `CSC_LINK` only in standard mode and leaves the
+keychain alone in custom mode. The app keeps its own afterSign hook or DMG
+script; the matrix, release, and manual check remain shared.
+
 The underlying pattern sets canonical values on the packaging step:
 
 ```yaml

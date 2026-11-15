@@ -81,6 +81,21 @@ on:
         required: false
         type: string
         default: builder
+      signing-mode:
+        description: standard (CSC_LINK) or custom (app-managed keychain)
+        required: false
+        type: string
+        default: standard
+      notarize-mode:
+        description: hook (afterSign), builtin (electron-builder), or none
+        required: false
+        type: string
+        default: hook
+      post-package-command:
+        description: macOS command after packaging (DMG signing/notarization)
+        required: false
+        type: string
+        default: ''
       artifact-globs:
         description: Files uploaded in artifacts mode
         required: false
@@ -177,13 +192,12 @@ jobs:
         include: ${{ fromJSON(inputs.matrix) }}
     runs-on: ${{ matrix.os }}
     env:
-      CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
-      CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
       APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
       APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY }}
       APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
       APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
       NOTARIZE_APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -218,15 +232,41 @@ jobs:
           TARGET_OS: ${{ matrix.os }}
           PROJECT_PATH: ${{ inputs.project-path }}
         run: ${{ inputs.sidecar-command }}
+      - uses: michael-borck/app-hq/.github/actions/electron-keychain@main
+        if: runner.os == 'macOS' && inputs.signing-mode == 'custom'
       - uses: michael-borck/app-hq/.github/actions/apple-signing@main
         if: runner.os == 'macOS'
+      - name: Configure signing environment
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          case "${{ inputs.notarize-mode }}" in
+            builtin)
+              echo "APPLE_API_KEY=$APPLE_API_KEY_PATH" >> "$GITHUB_ENV"
+              echo "APPLE_API_KEY_ID=${{ secrets.APPLE_API_KEY }}" >> "$GITHUB_ENV"
+              ;;
+            none)
+              echo "APPLE_API_KEY=" >> "$GITHUB_ENV"
+              echo "APPLE_API_KEY_PATH=" >> "$GITHUB_ENV"
+              ;;
+          esac
       - name: Package
         working-directory: ${{ inputs.project-path }}
         shell: bash
         env:
           PLATFORM: ${{ matrix.platform }}
           TARGET_OS: ${{ matrix.os }}
+          CSC_LINK: ${{ inputs.signing-mode == 'standard' && secrets.APPLE_CERTIFICATE || '' }}
+          CSC_KEY_PASSWORD: ${{ inputs.signing-mode == 'standard' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
         run: ${{ inputs.package-command }}
+      - name: Post-package (macOS)
+        if: runner.os == 'macOS' && inputs.post-package-command != ''
+        working-directory: ${{ inputs.project-path }}
+        shell: bash
+        env:
+          PLATFORM: ${{ matrix.platform }}
+          TARGET_OS: ${{ matrix.os }}
+        run: ${{ inputs.post-package-command }}
       - name: Upload artifacts
         if: inputs.publish-mode == 'artifacts'
         uses: actions/upload-artifact@v4
@@ -273,13 +313,12 @@ jobs:
     if: github.event_name == 'workflow_dispatch'
     runs-on: macos-15
     env:
-      CSC_LINK: ${{ secrets.APPLE_CERTIFICATE }}
-      CSC_KEY_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
       APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
       APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+      APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY }}
       APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
       APPLE_API_KEY_CONTENT: ${{ secrets.APPLE_API_KEY_CONTENT }}
       NOTARIZE_APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -313,14 +352,39 @@ jobs:
           TARGET_OS: macos-15
           PROJECT_PATH: ${{ inputs.project-path }}
         run: ${{ inputs.sidecar-command }}
+      - uses: michael-borck/app-hq/.github/actions/electron-keychain@main
+        if: inputs.signing-mode == 'custom'
       - uses: michael-borck/app-hq/.github/actions/apple-signing@main
+      - name: Configure signing environment
+        shell: bash
+        run: |
+          case "${{ inputs.notarize-mode }}" in
+            builtin)
+              echo "APPLE_API_KEY=$APPLE_API_KEY_PATH" >> "$GITHUB_ENV"
+              echo "APPLE_API_KEY_ID=${{ secrets.APPLE_API_KEY }}" >> "$GITHUB_ENV"
+              ;;
+            none)
+              echo "APPLE_API_KEY=" >> "$GITHUB_ENV"
+              echo "APPLE_API_KEY_PATH=" >> "$GITHUB_ENV"
+              ;;
+          esac
       - name: Build, sign and notarize
         working-directory: ${{ inputs.project-path }}
         shell: bash
         env:
           PLATFORM: mac
           TARGET_OS: macos-15
+          CSC_LINK: ${{ inputs.signing-mode == 'standard' && secrets.APPLE_CERTIFICATE || '' }}
+          CSC_KEY_PASSWORD: ${{ inputs.signing-mode == 'standard' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
         run: ${{ inputs.notarize-check-command }}
+      - name: Post-package (macOS)
+        if: inputs.post-package-command != ''
+        working-directory: ${{ inputs.project-path }}
+        shell: bash
+        env:
+          PLATFORM: mac
+          TARGET_OS: macos-15
+        run: ${{ inputs.post-package-command }}
       - name: Verify
         if: inputs.notarize-check-verify != ''
         working-directory: ${{ inputs.project-path }}
