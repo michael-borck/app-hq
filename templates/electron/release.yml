@@ -18,7 +18,7 @@ jobs:
     uses: michael-borck/app-hq/.github/workflows/electron-release.yml@main
     with:
       product-name: App
-      node-version: '22'
+      node-version: '24'
       preflight-command: npm run typecheck
       # Use $PLATFORM (mac|win|linux). Builder mode uploads from electron-builder.
       package-command: npx electron-builder --$PLATFORM --publish always
