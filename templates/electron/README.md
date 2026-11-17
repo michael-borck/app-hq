@@ -90,6 +90,13 @@ temporary-keychain import. `macos-14` is retired.
 - A tag captures the workflow at that commit. Re-running an old tag does not
   pick up later workflow changes; cut a new patch tag instead.
 
+## Release gate
+
+Gate packaging on the normal CI checks so a tag cannot publish a broken build.
+In playable-lessons, `release.yml` calls `./.github/workflows/ci.yml` as a
+`preflight` job and the build job declares `needs: preflight`. Add
+`workflow_call:` to the CI workflow's `on:` block.
+
 ## Verify before publishing
 
 The `notarize-check` job does this automatically:
