@@ -11,7 +11,7 @@ on:
         description: Node.js version
         required: false
         type: string
-        default: '22'
+        default: '24'
       project-path:
         description: Directory containing package.json and the electron-builder config
         required: false
@@ -150,8 +150,8 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ inputs.node-version }}
           cache: ${{ inputs.cache }}
@@ -215,8 +215,8 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_OWNER: ${{ github.repository_owner }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ inputs.node-version }}
           cache: ${{ inputs.cache }}
@@ -282,7 +282,7 @@ jobs:
         run: ${{ inputs.post-package-command }}
       - name: Upload artifacts
         if: inputs.publish-mode == 'artifacts'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: electron-${{ matrix.platform }}
           path: ${{ inputs.artifact-globs }}
@@ -298,7 +298,7 @@ jobs:
     steps:
       - name: Download artifacts
         if: inputs.publish-mode == 'artifacts'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: electron-*
           path: artifacts
@@ -342,8 +342,8 @@ jobs:
       ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
       GH_OWNER: ${{ github.repository_owner }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: ${{ inputs.node-version }}
           cache: ${{ inputs.cache }}
