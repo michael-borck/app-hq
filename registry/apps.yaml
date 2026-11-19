@@ -148,6 +148,12 @@ apps:
     signing_workflow: api-key
     notes: "Tauri batch verified with API-key notarization; manual dispatch uploads artifacts."
 
+  - repo: michael-borck/canturia
+    stack: tauri
+    mode: local
+    signing_workflow: api-key
+    notes: "Tauri; Python sidecar; shared app-hq workflow; lyricist providers and web preview."
+
   - repo: michael-borck/slide-stream
     stack: tauri
     mode: local
