@@ -121,8 +121,8 @@ apps:
   - repo: michael-borck/cairn
     stack: tauri
     mode: local
-    signing_workflow: none
-    notes: "No desktop release workflow yet; signing deferred until one exists."
+    signing_workflow: api-key
+    notes: "Shared Tauri workflow with updater: true; npm workspace (project-path apps/desktop); per-app updater key."
 
   - repo: michael-borck/case-crafter
     stack: tauri
