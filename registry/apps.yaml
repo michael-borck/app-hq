@@ -166,6 +166,12 @@ apps:
     signing_workflow: api-key
     notes: "Tauri batch C verified with API-key notarization; manual dispatch uploads artifacts."
 
+  - repo: michael-borck/winnow
+    stack: electron
+    mode: local
+    signing_workflow: api-key
+    notes: "Literature search and review; Electron shell per ADR-0026, electron-updater wired per ADR-0027; monorepo (core/server/web/cli/desktop)."
+
   - repo: michael-borck/video-to-guide
     stack: tauri
     mode: local
