@@ -37,6 +37,9 @@ One page. Answer before writing code.
 
 ## Release
 
+- [ ] GitHub repo created with an SSH remote (`git@github.com:…`);
+      package name checked and reserved early (PyPI/npm placeholder
+      release) ([runbooks/github-auth.md](../runbooks/github-auth.md)).
 - [ ] Signing/notarization plan ([runbooks/signing.md](../runbooks/signing.md)).
 - [ ] Runner choices recorded.
 - [ ] Update mechanism chosen (GitHub Releases / updater / static deploy).
