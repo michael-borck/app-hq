@@ -60,6 +60,7 @@ import sys
 
 checks = json.loads(sys.argv[1])
 body = {
+    "required_status_checks": None if checks is None else {"strict": False, "contexts": checks},
     "enforce_admins": True,
     "required_pull_request_reviews": {
         "required_approving_review_count": 0,
@@ -72,8 +73,6 @@ body = {
     "required_linear_history": True,
     "required_conversation_resolution": False,
 }
-if checks is not None:
-    body["required_status_checks"] = {"strict": False, "contexts": checks}
 print(json.dumps(body))
 PY
 }
