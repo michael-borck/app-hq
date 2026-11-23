@@ -5,6 +5,7 @@ trade-offs, and reference apps.
 
 | Pattern | Use when | References |
 |---|---|---|
+| Trunk-based PR workflow | Every owned app repo that ships | Lens, this playbook |
 | Local-first desktop | Single user, private data, offline-friendly | BookForge, Playable Lessons, most desktop apps |
 | Hybrid local + central | Same product for individuals and institutions | Curriculum Curator, Feed Forward |
 | Central server + private desktop wrapper | Shared engine, private practice/client mode | Feed Forward Desktop, Document Lens |
@@ -26,6 +27,8 @@ trade-offs, and reference apps.
   upload service.
 - Extract shared code only after two or three apps need it; premature shared
   libraries become a second product.
+- Protect `main` and require CI on every repo that ships; a branch workflow
+  without a gate is just a habit.
 
 ## Anti-patterns
 

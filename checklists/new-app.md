@@ -35,6 +35,15 @@ One page. Answer before writing code.
 - [ ] User-supplied content sandboxed.
 - [ ] Dependency and supply-chain checks.
 
+## Repository
+
+- [ ] SSH remote; `main` protected per
+      [patterns/git-workflow.md](../patterns/git-workflow.md)
+      (`scripts/protect-default-branch.sh`).
+- [ ] CI runs on every PR: reuse `.github/workflows/ci-node.yml` or
+      `ci-python.yml`; required checks are the PR checks, not release-only jobs.
+- [ ] Squash-merge only; `main` stays linear and releasable.
+
 ## Release
 
 - [ ] GitHub repo created with an SSH remote (`git@github.com:…`);

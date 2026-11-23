@@ -1,0 +1,62 @@
+name: CI (node)
+
+# Reusable PR/push gate for Node/Electron/Tauri repos. Keep the app's own
+# workflow a thin caller:
+#
+#   jobs:
+#     validate:
+#       uses: michael-borck/app-hq/.github/workflows/ci-node.yml@main
+#       with:
+#         working-directory: .
+#
+# See patterns/git-workflow.md.
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        type: string
+        default: "22"
+      working-directory:
+        type: string
+        default: "."
+      install-command:
+        type: string
+        default: "npm ci"
+      typecheck-command:
+        type: string
+        default: "npm run typecheck"
+      test-command:
+        type: string
+        default: "npm test"
+      build-command:
+        type: string
+        default: "npm run build"
+      cache:
+        type: string
+        default: "npm"
+      cache-dependency-path:
+        type: string
+        default: "**/package-lock.json"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+          cache: ${{ inputs.cache }}
+          cache-dependency-path: ${{ inputs.cache-dependency-path }}
+      - name: Install
+        run: ${{ inputs.install-command }}
+      - name: Typecheck
+        run: ${{ inputs.typecheck-command }}
+      - name: Test
+        run: ${{ inputs.test-command }}
+      - name: Build
+        run: ${{ inputs.build-command }}

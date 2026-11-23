@@ -1,3 +1,4 @@
+- [ ] Change merged through a PR (squash); `main` is protected.
 # Release checklist
 
 - [ ] Version bumped and committed.
