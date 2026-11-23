@@ -1,0 +1,59 @@
+name: CI (python)
+
+# Reusable PR/push gate for Python repos (uv + ruff + pytest). Keep the app's
+# own workflow a thin caller:
+#
+#   jobs:
+#     validate:
+#       uses: michael-borck/app-hq/.github/workflows/ci-python.yml@main
+#       with:
+#         python-versions: '["3.11", "3.12"]'
+#
+# The default commands match the lens family: a local .venv, ruff, pytest.
+# See patterns/git-workflow.md.
+
+on:
+  workflow_call:
+    inputs:
+      python-versions:
+        type: string
+        default: '["3.11", "3.12"]'
+      working-directory:
+        type: string
+        default: "."
+      install-command:
+        type: string
+        default: "uv pip install -e '.[dev]'"
+      format-command:
+        type: string
+        default: ".venv/bin/ruff format --check ."
+      lint-command:
+        type: string
+        default: ".venv/bin/ruff check ."
+      test-command:
+        type: string
+        default: ".venv/bin/pytest -v"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ${{ fromJson(inputs.python-versions) }}
+    defaults:
+      run:
+        working-directory: ${{ inputs.working-directory }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Create venv
+        run: uv venv --python ${{ matrix.python-version }}
+      - name: Install
+        run: ${{ inputs.install-command }}
+      - name: Format check
+        run: ${{ inputs.format-command }}
+      - name: Lint
+        run: ${{ inputs.lint-command }}
+      - name: Tests
+        run: ${{ inputs.test-command }}
