@@ -1,0 +1,106 @@
+name: Notarize DMG
+description: |
+  Sign, notarize, and staple DMG containers (macOS, opt-in). The app inside
+  the DMG must already be signed and notarized; this action covers the disk
+  image itself so Gatekeeper can validate the download offline.
+
+  Run after packaging and before artifacts are uploaded. In the shared
+  electron-release workflow that means publish-mode: artifacts (or a custom
+  post-package step), because publish-mode: builder publishes during the
+  package step, before this action can staple the DMG.
+
+inputs:
+  target-dir:
+    description: Directory containing .dmg files.
+    required: false
+    default: release
+  identity:
+    description: Developer ID identity; falls back to APPLE_SIGNING_IDENTITY.
+    required: false
+    default: ""
+  api-key-path:
+    description: Path to the App Store Connect .p8; falls back to APPLE_API_KEY_PATH, then APPLE_API_KEY when it is a file.
+    required: false
+    default: ""
+  api-key-id:
+    description: App Store Connect Key ID; falls back to APPLE_API_KEY_ID.
+    required: false
+    default: ""
+  api-issuer:
+    description: App Store Connect Issuer ID; falls back to APPLE_API_ISSUER.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Sign, notarize, and staple DMGs
+      shell: bash
+      env:
+        TARGET_DIR: ${{ inputs.target-dir }}
+        INPUT_IDENTITY: ${{ inputs.identity }}
+        INPUT_API_KEY_PATH: ${{ inputs.api-key-path }}
+        INPUT_API_KEY_ID: ${{ inputs.api-key-id }}
+        INPUT_API_ISSUER: ${{ inputs.api-issuer }}
+      run: |
+        set -euo pipefail
+
+        if [ "${RUNNER_OS:-}" != "macOS" ]; then
+          echo "Skipping DMG notarization: not macOS."
+          exit 0
+        fi
+
+        identity="${INPUT_IDENTITY:-${APPLE_SIGNING_IDENTITY:-}}"
+        key_path="${INPUT_API_KEY_PATH:-${APPLE_API_KEY_PATH:-}}"
+        key_id="${INPUT_API_KEY_ID:-${APPLE_API_KEY_ID:-}}"
+        issuer="${INPUT_API_ISSUER:-${APPLE_API_ISSUER:-}}"
+
+        # Builtin notarization exposes the .p8 path as APPLE_API_KEY; the
+        # afterSign-hook mode uses APPLE_API_KEY_PATH and APPLE_API_KEY as the
+        # Key ID. Handle both without guessing when an explicit input is given.
+        if [ -z "$key_path" ] && [ -n "${APPLE_API_KEY:-}" ] && [ -f "${APPLE_API_KEY}" ]; then
+          key_path="$APPLE_API_KEY"
+        fi
+        if [ -z "$key_id" ] && [ -n "${APPLE_API_KEY:-}" ] && [ ! -f "${APPLE_API_KEY}" ]; then
+          key_id="$APPLE_API_KEY"
+        fi
+
+        shopt -s nullglob
+        dmgs=("$TARGET_DIR"/*.dmg)
+        if [ ${#dmgs[@]} -eq 0 ]; then
+          echo "No DMGs found in $TARGET_DIR; nothing to do."
+          exit 0
+        fi
+
+        missing=0
+        for name in identity key_path key_id issuer; do
+          eval "value=\${$name}"
+          if [ -z "$value" ]; then
+            echo "::error::DMG notarization requires $name (set the app-hq Apple secrets)."
+            missing=1
+          fi
+        done
+        if [ "$missing" -ne 0 ]; then
+          exit 1
+        fi
+        if [ ! -f "$key_path" ]; then
+          echo "::error::API key file not found: $key_path"
+          exit 1
+        fi
+
+        for dmg in "${dmgs[@]}"; do
+          echo "Signing $dmg"
+          codesign --force --timestamp --sign "$identity" "$dmg"
+
+          echo "Submitting $dmg for notarization"
+          xcrun notarytool submit "$dmg" \
+            --key "$key_path" \
+            --key-id "$key_id" \
+            --issuer "$issuer" \
+            --wait
+
+          echo "Stapling $dmg"
+          xcrun stapler staple "$dmg"
+          xcrun stapler validate "$dmg"
+          spctl -a -vvv -t open --context context:primary-signature "$dmg"
+        done

@@ -22,5 +22,6 @@ Planned:
 
 The macOS signing/notarization composite action lives in
 `.github/actions/apple-signing`; it also writes `APPLE_API_KEY_PATH` for the
-Electron `notarize.js` hook. `electron/` and `tauri/` are caller templates for
-their shared workflows.
+Electron `notarize.js` hook. The optional DMG-container action is
+`.github/actions/notarize-dmg` (opt-in, not wired into the shared workflow).
+`electron/` and `tauri/` are caller templates for their shared workflows.

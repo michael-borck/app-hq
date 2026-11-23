@@ -68,6 +68,15 @@ If the API key secrets are absent, the hook falls back to
 workflow clears every Apple/notarization variable and builds unsigned rather
 than failing inside the hook.
 
+## Optional: staple the DMG container
+
+The afterSign hook staples the `.app`. To also make the `.dmg` itself pass
+`spctl` offline, add the opt-in
+[`notarize-dmg`](../../.github/actions/notarize-dmg/README.md) action after
+packaging and before the artifact upload. It requires `publish-mode: artifacts`
+(or a custom workflow), adds one notary submission per DMG/arch, and expects
+the app to already be signed and notarized. It is not enabled by default.
+
 ## Runner pin
 
 Use **`macos-15`** for Electron, and build arm64 explicitly:
