@@ -111,6 +111,10 @@ Three modes are supported; all use the same Developer ID and API key:
   and staples the `.dmg` container before the artifacts are uploaded. Use a
   custom `notarize-check-verify` that validates the DMG.
 
+The shared workflow uses `CSC_LINK` only in standard mode and leaves the
+keychain alone in custom mode. The app keeps its own afterSign hook or DMG
+script; the matrix, release, and manual check remain shared.
+
 ### Optional: DMG container signing/stapling
 
 The app notarization covers the `.app` and the normal first-launch Gatekeeper
@@ -128,8 +132,8 @@ launch and does not change the first-launch prompt.
 
 It expects `APPLE_SIGNING_IDENTITY`, the `.p8` path, key ID, and issuer in the
 environment (the `apple-signing` / `electron-keychain` actions set these) and
-fails if they are missing. It is **not** wired into the shared release workflow
-yet; decide per app.
+fails when there are DMGs but credentials are missing. It is **not** wired into
+the shared release workflow yet; decide per app.
 
 Ordering and caveats:
 
@@ -144,10 +148,6 @@ Ordering and caveats:
 - The app inside must already be signed and notarized.
 
 See [`../.github/actions/notarize-dmg/README.md`](../.github/actions/notarize-dmg/README.md).
-
-The shared workflow uses `CSC_LINK` only in standard mode and leaves the
-keychain alone in custom mode. The app keeps its own afterSign hook or DMG
-script; the matrix, release, and manual check remain shared.
 
 The underlying pattern sets canonical values on the packaging step:
 
