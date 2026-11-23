@@ -42,14 +42,16 @@ if [[ ${#REPOS[@]} -eq 0 ]]; then
   exit 2
 fi
 
-# Auto-detect required checks from the default branch's latest CI run, dropping
-# release-only contexts that never run on pull requests.
+# Auto-detect required checks from the default branch's latest CI run. Drop
+# release-only contexts that never run on pull requests (the portfolio's shared
+# release workflows prefix these with "release /"; older per-app workflows used
+# plain "build"/"deploy").
 detect_checks() {
   local repo="$1"
   gh api "repos/$repo/commits/$BRANCH/check-runs" --paginate \
     --jq '.check_runs[].name' 2>/dev/null \
     | sort -u \
-    | grep -vE '^(release /|deploy$|report-build-status$)' \
+    | grep -vE '^(release /|build|deploy|report-build-status)' \
     | paste -sd, - || true
 }
 
