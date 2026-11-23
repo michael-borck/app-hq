@@ -111,6 +111,40 @@ Three modes are supported; all use the same Developer ID and API key:
   and staples the `.dmg` container before the artifacts are uploaded. Use a
   custom `notarize-check-verify` that validates the DMG.
 
+### Optional: DMG container signing/stapling
+
+The app notarization covers the `.app` and the normal first-launch Gatekeeper
+prompt. The disk image can additionally be signed, notarized, and stapled with
+the opt-in `.github/actions/notarize-dmg` composite action. That makes the DMG
+itself pass `spctl` and validate offline; it is not required for the app to
+launch and does not change the first-launch prompt.
+
+```yaml
+# after packaging, before artifacts are uploaded
+- uses: michael-borck/app-hq/.github/actions/notarize-dmg@main
+  with:
+    target-dir: release
+```
+
+It expects `APPLE_SIGNING_IDENTITY`, the `.p8` path, key ID, and issuer in the
+environment (the `apple-signing` / `electron-keychain` actions set these) and
+fails if they are missing. It is **not** wired into the shared release workflow
+yet; decide per app.
+
+Ordering and caveats:
+
+- Run it after packaging and before upload. With `publish-mode: builder`,
+  electron-builder publishes during the package step, so the uploaded DMG
+  would be unstapled; use `publish-mode: artifacts` or a custom workflow.
+- Each DMG adds another notary submission per arch.
+- Stapling changes the DMG hash after `*.dmg.blockmap` / `latest-mac.yml` are
+  generated. macOS auto-update uses the ZIP, not the DMG; do not use the DMG
+  as the update artifact, or regenerate its metadata.
+- The DMG must be final before stapling; later edits invalidate the ticket.
+- The app inside must already be signed and notarized.
+
+See [`../.github/actions/notarize-dmg/README.md`](../.github/actions/notarize-dmg/README.md).
+
 The shared workflow uses `CSC_LINK` only in standard mode and leaves the
 keychain alone in custom mode. The app keeps its own afterSign hook or DMG
 script; the matrix, release, and manual check remain shared.
@@ -338,7 +372,8 @@ key is present.
 - All 30 repos have canonical Apple secrets.
 - book-forge: Electron pilot signed + notarized with API key on `macos-15`.
 - Electron batch A: debrief, cabinet, career-compass verified with API-key
-  notarization on `macos-15` (career-compass DMG checked with spctl/stapler).
+  notarization on `macos-15` (cabinet and career-compass DMGs checked with
+  spctl/stapler).
 - Electron batch B: playable-lessons, study-buddy, talk-buddy verified with
   API-key notarization on `macos-15`.
 - Electron batch C: insight-lens, thematic-lens, lens-desktop,
