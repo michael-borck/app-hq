@@ -13,7 +13,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPOS_FILE="$SCRIPT_DIR/apple-signing-repos.txt"
-CONFIG_FILE="${APPLE_SIGNING_CONFIG:-$HOME/.certs/apple.stuff}"
+CONFIG_FILE="${APPLE_SIGNING_CONFIG:-$HOME/.certs/apple.env}"
 APPLY=0
 CHECK=0
 TYPE_FILTER=""
@@ -26,7 +26,7 @@ Options:
   --apply              Actually set secrets (default: dry run)
   --check              Report which canonical secrets are missing
   --repos FILE         Repo list (default: apple-signing-repos.txt)
-  --config FILE        Local signing config (default: ~/.certs/apple.stuff)
+  --config FILE        Local signing env file (default: ~/.certs/apple.env)
   --type electron|tauri
   -h, --help
 
@@ -43,16 +43,17 @@ Optional during transition (legacy Apple ID notarization):
   APPLE_ID
   APPLE_APP_SPECIFIC_PASSWORD
 
-Values can also come from ~/.certs/apple.stuff (or --config):
-  Certificate password: ...
-  Apple Team ID (10 chars): ...
-  Signing Identity: Developer ID Application: Name (TEAMID)
-  API Key ID: ...
-  API Issuer ID: ...
+Values are also read from ~/.certs/apple.env (or --config), one per line, in
+KEY=value form with or without export, and never override the environment:
+  APPLE_CERTIFICATE_P12        path to the .p12 (default ~/.certs/Certificates.p12)
+  APPLE_SIGNING_IDENTITY       "Developer ID Application: Name (TEAMID)"
+  APPLE_TEAM_ID                Apple team id
+  APPLE_API_KEY_P8             path to App Store Connect AuthKey_*.p8
+  APPLE_API_KEY                App Store Connect Key ID
+  APPLE_API_ISSUER             App Store Connect Issuer ID
 
-Default files when using that config:
-  ~/.certs/Certificates.p12
-  ~/.certs/AuthKey_<API Key ID>.p8
+The .p12 password is not read from the file: pass it in the environment
+(read -rs), as runbooks/signing.md describes.
 EOF
 }
 
@@ -75,32 +76,36 @@ command -v openssl >/dev/null || { echo "openssl is required" >&2; exit 1; }
 
 b64() { openssl base64 -A -in "$1"; }
 
-config_field() {
-  local key="$1"
-  [[ -f "$CONFIG_FILE" ]] || return 1
-  awk -v k="$key" '
-    /^\[app-specific passwords\]/ { exit }
-    /^[[:space:]]*#/ || /^[[:space:]]*$/ { next }
-    index($0, k) == 1 {
-      line=$0
-      sub(/^[^:]*:[[:space:]]*/, "", line)
-      sub(/\r$/, "", line)
-      print line
-      exit
-    }
-  ' "$CONFIG_FILE"
+# Fill in any variable the environment has not provided, from an env file:
+# KEY=value per line, "export " allowed, surrounding quotes and a leading ~ handled.
+load_env_file() {
+  local file="$1" line key value
+  [[ -f "$file" ]] || return 0
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    [[ "$line" =~ ^[[:space:]]*(#|$) ]] && continue
+    if [[ "$line" =~ ^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_]*)=(.*)$ ]]; then
+      key="${BASH_REMATCH[2]}"
+      value="${BASH_REMATCH[3]}"
+      case "$value" in
+        \"*\") value="${value#\"}"; value="${value%\"}" ;;
+        \'*\') value="${value#\'}"; value="${value%\'}" ;;
+      esac
+      # Paths are written as "~/…" or "$HOME/…"; expand both, without eval.
+      value="${value//\$\{HOME\}/$HOME}"
+      value="${value//\$HOME/$HOME}"
+      case "$value" in
+        "~"*) value="$HOME${value#\~}" ;;
+      esac
+      [[ -n "${!key:-}" ]] || printf -v "$key" '%s' "$value"
+    fi
+  done < "$file"
 }
 
-if [[ -f "$CONFIG_FILE" ]]; then
-  APPLE_CERTIFICATE_P12="${APPLE_CERTIFICATE_P12:-$HOME/.certs/Certificates.p12}"
-  APPLE_CERTIFICATE_PASSWORD="${APPLE_CERTIFICATE_PASSWORD:-$(config_field "Certificate password" || true)}"
-  APPLE_TEAM_ID="${APPLE_TEAM_ID:-$(config_field "Apple Team ID (10 chars)" || true)}"
-  APPLE_API_KEY="${APPLE_API_KEY:-$(config_field "API Key ID" || true)}"
-  APPLE_API_ISSUER="${APPLE_API_ISSUER:-$(config_field "API Issuer ID" || true)}"
-  APPLE_SIGNING_IDENTITY="${APPLE_SIGNING_IDENTITY:-$(config_field "Signing Identity" || true)}"
-  if [[ -n "${APPLE_API_KEY:-}" ]]; then
-    APPLE_API_KEY_P8="${APPLE_API_KEY_P8:-$HOME/.certs/AuthKey_${APPLE_API_KEY}.p8}"
-  fi
+load_env_file "$CONFIG_FILE"
+APPLE_CERTIFICATE_P12="${APPLE_CERTIFICATE_P12:-$HOME/.certs/Certificates.p12}"
+if [[ -n "${APPLE_API_KEY:-}" ]]; then
+  APPLE_API_KEY_P8="${APPLE_API_KEY_P8:-$HOME/.certs/AuthKey_${APPLE_API_KEY}.p8}"
 fi
 
 if [[ -z "${APPLE_SIGNING_IDENTITY:-}" ]]; then
