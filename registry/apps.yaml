@@ -196,6 +196,30 @@ apps:
     signing_workflow: api-key
     notes: "Tauri batch B verified with API-key notarization; own updater key preserved."
 
+  - repo: michael-borck/indagar
+    stack: electron
+    mode: local
+    signing_workflow: api-key
+    notes: "Python CLI with an Electron desktop under desktop/; checked out as indagar. Own desktop-release workflow (App Store Connect API key, on tags); v0.6.3 released 2026-11-21."
+
+  - repo: michael-borck/tavola
+    stack: tauri
+    mode: local
+    signing_workflow: api-key
+    notes: "Local-first infographics; desktop under desktop/; checked out as infographic-gen. Own release workflow publishes the Python package to PyPI (PYPI_TOKEN secret) and builds the desktops with API-key signing; v0.1.1 released 2026-11-21."
+
+  - repo: michael-borck/narra
+    stack: tauri
+    mode: hybrid
+    signing_workflow: api-key
+    notes: "Podcasts from PDFs and text; desktop under desktop/; checked out as podcast-gen. Shared app-hq Tauri workflow; also ships a Dockerfile and a deploy/ directory. v0.8.0 released 2026-11-20."
+
+  - repo: michael-borck/sartor
+    stack: tauri
+    mode: local
+    signing_workflow: api-key
+    notes: "Résumé tailoring: Python CLI, local web UI and a Tauri desktop under desktop/. Shared app-hq Tauri workflow; v0.3.1 released 2026-11-23."
+
 # Content-store companions (not desktop apps)
 services:
   - repo: michael-borck/lorekeeper-packs
@@ -207,3 +231,15 @@ services:
   - repo: michael-borck/knotebook-store
     pattern: static-pack-store
     notes: "Signed catalogue; private key stays local."
+
+# Generators and examples that ship a desktop shell (not products)
+templates:
+  - repo: michael-borck/ship-python-template
+    stack: electron
+    notes: "Generates multi-platform Python apps: FastAPI backend, React/TypeScript frontend, Electron desktop; checked out under books/ship-support/."
+  - repo: michael-borck/ship-python-cookiecutter
+    stack: electron
+    notes: "Cookiecutter wrapper around the same stack, with Docker containerisation; checked out under books/ship-support/."
+  - repo: michael-borck/ship-python-example
+    stack: electron
+    notes: "Example of the same stack built into web, PWA and Electron; checked out under books/ship-support/."

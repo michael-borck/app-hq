@@ -16,6 +16,8 @@ michael-borck/thematic-lens electron
 michael-borck/playable-lessons electron
 michael-borck/study-buddy electron
 michael-borck/talk-buddy electron
+michael-borck/indagar electron
+michael-borck/winnow electron
 
 michael-borck/cairn tauri
 michael-borck/case-crafter tauri
@@ -30,6 +32,7 @@ michael-borck/slide-stream tauri
 michael-borck/sartor tauri
 michael-borck/venture-lab tauri
 michael-borck/video-to-guide tauri
+michael-borck/tavola tauri
 retroverse-studios/astron tauri     # has its own TAURI_SIGNING_PRIVATE_KEY
 retroverse-studios/karaoke-stage tauri
 retroverse-studios/numeron tauri    # has its own TAURI_SIGNING_PRIVATE_KEY

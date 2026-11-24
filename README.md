@@ -20,6 +20,9 @@ This is not a monorepo and not a business plan. App code stays in its own repos.
 - **Everyday git?** [patterns/git-workflow.md](patterns/git-workflow.md)
 - **Looking for an existing pattern?** [patterns/](patterns/)
 - **What apps exist and how are they built?** [registry/apps.yaml](registry/apps.yaml)
+- **Is the registry complete?** `python3 scripts/check-registry.py` — finds
+  Electron/Tauri checkouts the registry does not list, on the machine that
+  holds them
 
 ## Principles
 
