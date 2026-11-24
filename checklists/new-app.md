@@ -43,6 +43,9 @@ One page. Answer before writing code.
 - [ ] CI runs on every PR: reuse `.github/workflows/ci-node.yml` or
       `ci-python.yml`; required checks are the PR checks, not release-only jobs.
 - [ ] Squash-merge only; `main` stays linear and releasable.
+- [ ] Registered in [registry/apps.yaml](../registry/apps.yaml) (and in
+      `scripts/apple-signing-repos.txt` once it signs with the API key);
+      `python3 scripts/check-registry.py` finds omissions.
 
 ## Release
 

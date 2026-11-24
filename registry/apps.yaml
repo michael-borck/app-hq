@@ -231,3 +231,15 @@ services:
   - repo: michael-borck/knotebook-store
     pattern: static-pack-store
     notes: "Signed catalogue; private key stays local."
+
+# Generators and examples that ship a desktop shell (not products)
+templates:
+  - repo: michael-borck/ship-python-template
+    stack: electron
+    notes: "Generates multi-platform Python apps: FastAPI backend, React/TypeScript frontend, Electron desktop; checked out under books/ship-support/."
+  - repo: michael-borck/ship-python-cookiecutter
+    stack: electron
+    notes: "Cookiecutter wrapper around the same stack, with Docker containerisation; checked out under books/ship-support/."
+  - repo: michael-borck/ship-python-example
+    stack: electron
+    notes: "Example of the same stack built into web, PWA and Electron; checked out under books/ship-support/."

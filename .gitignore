@@ -29,3 +29,7 @@ target/
 coverage/
 *.log
 *.tmp
+
+# Python
+__pycache__/
+*.pyc
