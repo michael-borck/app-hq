@@ -71,3 +71,37 @@ sha256sum App.AppImage
 - [ ] One artifact per platform verified.
 - [ ] Release notes mention breaking changes.
 - [ ] Legacy secrets not required by this workflow.
+
+## Python packages (PyPI)
+
+tavola publishes from GitHub Actions: its release workflow builds with
+`uv build` and uploads through `pypa/gh-action-pypi-publish`, using a
+`PYPI_TOKEN` secret (v0.1.1, 2026-11-21). bowerbird is published by hand,
+because its workflow relies on trusted publishing, which is not
+registered for the repository. By hand, from the maintainer's machine:
+
+1. Bump `version` in `pyproject.toml`, then `uv lock`.
+2. `uv build`, then `twine check dist/<name>-<version>`.
+3. Version commit, annotated tag, push both (tag rules as above).
+4. `twine upload dist/<name>-<version>` — credentials come from `~/.pypirc`.
+5. Check `https://pypi.org/pypi/<name>/json`: both files present, sha256
+   equal to the local build, and a fresh `pip install` resolving to the new
+   version (the index lags seconds to a minute).
+
+An upload is final: PyPI never replaces or removes a file, it only takes a
+new version.
+
+Future work: publish bowerbird from GitHub Actions as well. Either
+
+- [ ] do what tavola does: add a `PYPI_TOKEN` secret to the repository
+      and pass `password: ${{ secrets.PYPI_TOKEN }}` to
+      `pypa/gh-action-pypi-publish` in `publish.yml`; or
+- [ ] keep trusted publishing and register a publisher on PyPI — owner,
+      repository, workflow file (`publish.yml`) and environment (`pypi`).
+      Without it the upload step fails at the token exchange.
+
+Either way:
+
+- [ ] Cut releases as GitHub Releases; a pushed tag alone does not trigger
+      the workflow.
+- [ ] Retire the manual steps above once one release has gone through.
