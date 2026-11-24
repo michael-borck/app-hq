@@ -73,6 +73,9 @@ scripts/sync-apple-secrets.sh
 scripts/sync-apple-secrets.sh --apply
 ```
 
+The script also reads `~/.certs/apple.env` itself, so the `source` above is
+optional. The `.p12` password is the one value it will not read from a file.
+
 `michael-borck` is a personal account, so per-repo secrets are required. The
 `retroverse-studios` repos could move to org-level secrets later.
 
