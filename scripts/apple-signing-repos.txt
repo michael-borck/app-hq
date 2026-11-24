@@ -27,6 +27,7 @@ michael-borck/limn tauri
 michael-borck/canturia tauri
 michael-borck/narra tauri
 michael-borck/slide-stream tauri
+michael-borck/sartor tauri
 michael-borck/venture-lab tauri
 michael-borck/video-to-guide tauri
 retroverse-studios/astron tauri     # has its own TAURI_SIGNING_PRIVATE_KEY
