@@ -27,6 +27,7 @@ michael-borck/document-lens tauri   # has its own TAURI_SIGNING_PRIVATE_KEY
 michael-borck/lesson-loom tauri
 michael-borck/limn tauri
 michael-borck/canturia tauri
+michael-borck/cartwright tauri
 michael-borck/narra tauri
 michael-borck/slide-stream tauri
 michael-borck/sartor tauri

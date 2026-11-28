@@ -154,6 +154,12 @@ apps:
     signing_workflow: api-key
     notes: "Tauri; Python sidecar; shared app-hq workflow; lyricist providers and web preview."
 
+  - repo: michael-borck/cartwright
+    stack: tauri
+    mode: local
+    signing_workflow: api-key
+    notes: "Tauri; Atari 2600 game workshop; shared app-hq release and CI workflows; web app deploys to Pages. No release cut yet."
+
   - repo: michael-borck/slide-stream
     stack: tauri
     mode: local
