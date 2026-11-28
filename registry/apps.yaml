@@ -158,7 +158,7 @@ apps:
     stack: tauri
     mode: local
     signing_workflow: api-key
-    notes: "Tauri; Atari 2600 game workshop; shared app-hq release and CI workflows; web app deploys to Pages. No release cut yet."
+    notes: "Tauri; Atari 2600 game workshop; v0.1.0 released 2026-11-28 through the shared app-hq workflow; all four matrix legs built, macOS signed/notarized; updater on with a per-app key; web app and landing page deploy to Pages, and the landing page links straight to release assets."
 
   - repo: michael-borck/slide-stream
     stack: tauri
